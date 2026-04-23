@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import RequireAuth from "./components/RequireAuth";
+import RequirePermission from "./components/RequirePermission";
 import PublicOnly from "./components/PublicOnly";
 import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
@@ -26,12 +27,12 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/org" element={<OrgStructurePage />} />
-          <Route path="/textbooks" element={<TextbooksPage />} />
-          <Route path="/textbooks/card/:id" element={<TextbookCardPage />} />
-          <Route path="/textbooks/manage" element={<TextbookManagePage />} />
-          <Route path="/textbooks/manage/card/new" element={<TextbookCardEditPage />} />
-          <Route path="/textbooks/manage/card/:id/edit" element={<TextbookCardEditPage />} />
-          <Route path="/textbooks/manage/assignments" element={<TextbookAssignmentsPage />} />
+          <Route path="/textbooks" element={<RequirePermission code="textbooks.view"><TextbooksPage /></RequirePermission>} />
+          <Route path="/textbooks/card/:id" element={<RequirePermission code="textbooks.view"><TextbookCardPage /></RequirePermission>} />
+          <Route path="/textbooks/manage" element={<RequirePermission code="textbooks.edit"><TextbookManagePage /></RequirePermission>} />
+          <Route path="/textbooks/manage/card/new" element={<RequirePermission code="textbooks.edit"><TextbookCardEditPage /></RequirePermission>} />
+          <Route path="/textbooks/manage/card/:id/edit" element={<RequirePermission code="textbooks.edit"><TextbookCardEditPage /></RequirePermission>} />
+          <Route path="/textbooks/assignments" element={<RequirePermission code="textbooks.manage_assignments"><TextbookAssignmentsPage /></RequirePermission>} />
         </Route>
       </Route>
 

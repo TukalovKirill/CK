@@ -1,191 +1,432 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { getCard, createCard, updateCard, getSections, getCategories, uploadCardPhoto } from "../api/textbooks";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import {
+    getCard, createCard, updateCard, getSections, getCategories,
+    uploadCardPhoto, deleteCardPhoto, uploadParagraphPhoto, deleteParagraphPhoto,
+} from "../api/textbooks";
+import useSessionState from "../hooks/useSessionState";
+import Lightbox from "../components/Lightbox";
 import toast from "react-hot-toast";
-import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Upload, Image, X, GripVertical } from "lucide-react";
+
+const SESSION_KEY = "tb_cardEditForm";
+
+function emptyForm() {
+    return { name: "", section: "", category: "", paragraphs: [], tags: [], newPhotos: [], existingPhotos: [] };
+}
 
 export default function TextbookCardEditPage() {
-  const { id } = useParams();
-  const isEdit = Boolean(id);
-  const navigate = useNavigate();
+    const { id } = useParams();
+    const isEdit = Boolean(id);
+    const navigate = useNavigate();
 
-  const [form, setForm] = useState({ name: "", section: "", category: "" });
-  const [paragraphs, setParagraphs] = useState([]);
-  const [tags, setTags] = useState([]);
-  const [tagInput, setTagInput] = useState("");
-  const [sections, setSections] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+    const [form, setForm] = useSessionState(SESSION_KEY, emptyForm());
+    const [tagInput, setTagInput] = useState("");
+    const [sections, setSections] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [lightboxSrc, setLightboxSrc] = useState(null);
+    const [loadedId, setLoadedId] = useState(null);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const [s, c] = await Promise.all([getSections(), getCategories()]);
-        setSections(s.data);
-        setCategories(c.data);
-        if (isEdit) {
-          const res = await getCard(id);
-          const card = res.data;
-          setForm({ name: card.name, section: card.section || "", category: card.category || "" });
-          setParagraphs(
-            card.paragraphs?.map((p) => ({
-              paragraph_type: p.paragraph_type,
-              label: p.label,
-              text: p.text,
-              order: p.order,
-              has_photo: Boolean(p.photo),
-            })) || []
-          );
-          setTags(card.tags?.map((t) => t.tag) || []);
-        }
-      } catch {
-        toast.error("Ошибка загрузки");
-      } finally {
-        setLoading(false);
-      }
+    const photoInputRef = useRef(null);
+    const paragraphPhotoRefs = useRef({});
+
+    useEffect(() => {
+        const load = async () => {
+            setLoading(true);
+            try {
+                const [secRes, catRes] = await Promise.all([getSections(), getCategories()]);
+                setSections(secRes.data);
+                setCategories(catRes.data);
+
+                if (isEdit && loadedId !== id) {
+                    const res = await getCard(id);
+                    const card = res.data;
+                    setForm({
+                        name: card.name,
+                        section: card.section || "",
+                        category: card.category || "",
+                        paragraphs: card.paragraphs?.map((p) => ({
+                            paragraph_type: p.paragraph_type,
+                            label: p.label,
+                            text: p.text,
+                            order: p.order,
+                            has_photo: Boolean(p.photo),
+                            photoUrl: p.photo || null,
+                            newPhoto: null,
+                        })) || [],
+                        tags: card.tags?.map((t) => t.tag) || [],
+                        newPhotos: [],
+                        existingPhotos: card.photos?.map((p) => ({ id: p.id, file: p.file })) || [],
+                    });
+                    setLoadedId(id);
+                } else if (!isEdit && loadedId !== "new") {
+                    const cached = sessionStorage.getItem(SESSION_KEY);
+                    if (!cached) setForm(emptyForm());
+                    setLoadedId("new");
+                }
+            } catch {
+                toast.error("Ошибка загрузки");
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, [id]);
+
+    const updateForm = (updates) => setForm((prev) => ({ ...prev, ...updates }));
+
+    const addParagraph = () => {
+        updateForm({
+            paragraphs: [...form.paragraphs, {
+                paragraph_type: "front", label: "", text: "", order: form.paragraphs.length,
+                has_photo: false, photoUrl: null, newPhoto: null,
+            }],
+        });
     };
-    load();
-  }, [id]);
 
-  const addParagraph = () => {
-    setParagraphs([...paragraphs, { paragraph_type: "front", label: "", text: "", order: paragraphs.length }]);
-  };
+    const updateParagraph = (i, field, value) => {
+        const copy = [...form.paragraphs];
+        copy[i] = { ...copy[i], [field]: value };
+        updateForm({ paragraphs: copy });
+    };
 
-  const updateParagraph = (i, field, value) => {
-    const copy = [...paragraphs];
-    copy[i] = { ...copy[i], [field]: value };
-    setParagraphs(copy);
-  };
+    const removeParagraph = (i) => {
+        updateForm({ paragraphs: form.paragraphs.filter((_, j) => j !== i) });
+    };
 
-  const removeParagraph = (i) => {
-    setParagraphs(paragraphs.filter((_, j) => j !== i));
-  };
+    const handleParagraphPhoto = (i, file) => {
+        if (!file) return;
+        const copy = [...form.paragraphs];
+        copy[i] = { ...copy[i], has_photo: true, newPhoto: file, photoUrl: URL.createObjectURL(file) };
+        updateForm({ paragraphs: copy });
+    };
 
-  const addTag = () => {
-    const t = tagInput.trim().toLowerCase();
-    if (t && !tags.includes(t)) {
-      setTags([...tags, t]);
-    }
-    setTagInput("");
-  };
+    const removeParagraphPhoto = (i) => {
+        const copy = [...form.paragraphs];
+        copy[i] = { ...copy[i], has_photo: false, newPhoto: null, photoUrl: null };
+        updateForm({ paragraphs: copy });
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.name.trim()) {
-      toast.error("Введите название");
-      return;
-    }
-    setSaving(true);
-    try {
-      const data = {
-        name: form.name,
-        section: form.section || null,
-        category: form.category || null,
-        paragraphs_data: paragraphs,
-        tags_data: tags,
-      };
-      if (isEdit) {
-        await updateCard(id, data);
-        toast.success("Сохранено");
-      } else {
-        await createCard(data);
-        toast.success("Создано");
-      }
-      navigate("/textbooks/manage");
-    } catch {
-      toast.error("Ошибка сохранения");
-    } finally {
-      setSaving(false);
-    }
-  };
+    const addTag = () => {
+        const t = tagInput.trim().toLowerCase();
+        if (t && !form.tags.includes(t)) {
+            updateForm({ tags: [...form.tags, t] });
+        }
+        setTagInput("");
+    };
 
-  const filteredCategories = form.section
-    ? categories.filter((c) => String(c.section) === String(form.section))
-    : categories;
+    const removeTag = (i) => {
+        updateForm({ tags: form.tags.filter((_, j) => j !== i) });
+    };
 
-  if (loading) return <p className="text-center py-8 text-gray-400">Загрузка...</p>;
+    const handlePhotoFiles = (files) => {
+        const items = Array.from(files).map((f) => ({
+            file: f,
+            preview: URL.createObjectURL(f),
+        }));
+        updateForm({ newPhotos: [...(form.newPhotos || []), ...items] });
+    };
 
-  return (
-    <div className="max-w-2xl mx-auto">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
-        <ArrowLeft size={16} /> Назад
-      </button>
+    const removeNewPhoto = (i) => {
+        updateForm({ newPhotos: form.newPhotos.filter((_, j) => j !== i) });
+    };
 
-      <h1 className="text-xl font-bold mb-4">{isEdit ? "Редактирование" : "Новая карточка"}</h1>
+    const removeExistingPhoto = async (photoId) => {
+        try {
+            await deleteCardPhoto(photoId);
+            updateForm({ existingPhotos: form.existingPhotos.filter((p) => p.id !== photoId) });
+        } catch {
+            toast.error("Ошибка удаления фото");
+        }
+    };
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input placeholder="Название" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="w-full border rounded px-3 py-2 text-sm" required />
+    const handleDrop = (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files.length) handlePhotoFiles(e.dataTransfer.files);
+    };
 
-        <div className="flex gap-3">
-          <select value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value, category: "" })}
-            className="border rounded px-3 py-2 text-sm flex-1">
-            <option value="">Раздел</option>
-            {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-            className="border rounded px-3 py-2 text-sm flex-1">
-            <option value="">Категория</option>
-            {filteredCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!form.name.trim()) { toast.error("Введите название"); return; }
+        setSaving(true);
+        try {
+            const data = {
+                name: form.name,
+                section: form.section || null,
+                category: form.category || null,
+                paragraphs_data: form.paragraphs.map((p, i) => ({
+                    paragraph_type: p.paragraph_type,
+                    label: p.label,
+                    text: p.text,
+                    order: i,
+                    has_photo: p.has_photo,
+                })),
+                tags_data: form.tags,
+            };
 
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium">Параграфы</p>
-            <button type="button" onClick={addParagraph} className="text-blue-600 text-sm flex items-center gap-1">
-              <Plus size={14} /> Добавить
-            </button>
-          </div>
-          <div className="space-y-3">
-            {paragraphs.map((p, i) => (
-              <div key={i} className="bg-gray-50 rounded p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <select value={p.paragraph_type} onChange={(e) => updateParagraph(i, "paragraph_type", e.target.value)}
-                    className="border rounded px-2 py-1 text-xs">
-                    <option value="front">Основной</option>
-                    <option value="detail">Подробность</option>
-                  </select>
-                  <button type="button" onClick={() => removeParagraph(i)} className="text-red-400 hover:text-red-600">
-                    <Trash2 size={14} />
-                  </button>
+            let cardId;
+            if (isEdit) {
+                await updateCard(id, data);
+                cardId = id;
+                toast.success("Сохранено");
+            } else {
+                const res = await createCard(data);
+                cardId = res.data.id;
+                toast.success("Создано");
+            }
+
+            for (const np of (form.newPhotos || [])) {
+                await uploadCardPhoto(cardId, np.file);
+            }
+
+            const cardRes = await getCard(cardId);
+            const savedParagraphs = cardRes.data.paragraphs || [];
+            for (let i = 0; i < form.paragraphs.length; i++) {
+                const p = form.paragraphs[i];
+                if (p.newPhoto && savedParagraphs[i]) {
+                    await uploadParagraphPhoto(savedParagraphs[i].id, p.newPhoto);
+                }
+            }
+
+            sessionStorage.removeItem(SESSION_KEY);
+            navigate("/textbooks/manage");
+        } catch {
+            toast.error("Ошибка сохранения");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const filteredCategories = form.section
+        ? categories.filter((c) => String(c.section) === String(form.section))
+        : categories;
+
+    if (loading) return <p className="text-center py-8 text-gray-500">Загрузка...</p>;
+
+    return (
+        <div className="max-w-2xl mx-auto">
+            <Link to="/textbooks/manage" className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4">
+                <ArrowLeft size={14} /> Назад к управлению
+            </Link>
+
+            <h1 className="text-lg font-semibold mb-4">{isEdit ? "Редактирование карточки" : "Новая карточка"}</h1>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Название</label>
+                    <input
+                        value={form.name}
+                        onChange={(e) => updateForm({ name: e.target.value })}
+                        className="w-full border border-gray-300 px-2 py-1.5 text-sm"
+                        required
+                    />
                 </div>
-                <input placeholder="Заголовок" value={p.label} onChange={(e) => updateParagraph(i, "label", e.target.value)}
-                  className="w-full border rounded px-3 py-1.5 text-sm" />
-                <textarea placeholder="Текст" value={p.text} onChange={(e) => updateParagraph(i, "text", e.target.value)}
-                  rows={3} className="w-full border rounded px-3 py-1.5 text-sm resize-y" />
-              </div>
-            ))}
-          </div>
-        </div>
 
-        <div>
-          <p className="text-sm font-medium mb-2">Теги</p>
-          <div className="flex flex-wrap gap-1 mb-2">
-            {tags.map((t, i) => (
-              <span key={i} className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">
-                {t}
-                <button type="button" onClick={() => setTags(tags.filter((_, j) => j !== i))}
-                  className="ml-1 text-red-400">&times;</button>
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <input placeholder="Добавить тег" value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
-              className="border rounded px-3 py-1.5 text-sm flex-1" />
-            <button type="button" onClick={addTag} className="text-blue-600 text-sm">+</button>
-          </div>
-        </div>
+                <div className="flex gap-3">
+                    <div className="flex-1">
+                        <label className="text-xs text-gray-500 mb-1 block">Раздел</label>
+                        <select
+                            value={form.section}
+                            onChange={(e) => updateForm({ section: e.target.value, category: "" })}
+                            className="w-full border border-gray-300 px-2 py-1.5 text-sm"
+                        >
+                            <option value="">—</option>
+                            {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex-1">
+                        <label className="text-xs text-gray-500 mb-1 block">Категория</label>
+                        <select
+                            value={form.category}
+                            onChange={(e) => updateForm({ category: e.target.value })}
+                            className="w-full border border-gray-300 px-2 py-1.5 text-sm"
+                        >
+                            <option value="">—</option>
+                            {filteredCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                    </div>
+                </div>
 
-        <button type="submit" disabled={saving}
-          className="w-full bg-blue-600 text-white py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-          {saving ? "Сохранение..." : isEdit ? "Сохранить" : "Создать"}
-        </button>
-      </form>
-    </div>
-  );
+                <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Фото</label>
+                    <div
+                        className="border border-dashed border-gray-300 p-4 text-center text-sm text-gray-400 cursor-pointer hover:border-gray-500 transition-colors"
+                        onClick={() => photoInputRef.current?.click()}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={handleDrop}
+                    >
+                        <Upload size={20} className="mx-auto mb-1" />
+                        Перетащите фото или нажмите для загрузки
+                    </div>
+                    <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => { if (e.target.files.length) handlePhotoFiles(e.target.files); e.target.value = ""; }}
+                    />
+                    {((form.existingPhotos?.length || 0) + (form.newPhotos?.length || 0)) > 0 && (
+                        <div className="flex gap-2 mt-2 flex-wrap">
+                            {form.existingPhotos?.map((p) => (
+                                <div key={p.id} className="relative w-20 h-20 border border-gray-200 group">
+                                    <img
+                                        src={p.file}
+                                        alt=""
+                                        className="w-full h-full object-cover cursor-pointer"
+                                        onClick={() => setLightboxSrc(p.file)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeExistingPhoto(p.id)}
+                                        className="absolute top-0 right-0 bg-white border border-gray-300 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X size={10} />
+                                    </button>
+                                </div>
+                            ))}
+                            {form.newPhotos?.map((p, i) => (
+                                <div key={`new-${i}`} className="relative w-20 h-20 border border-gray-200 group">
+                                    <img src={p.preview} alt="" className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeNewPhoto(i)}
+                                        className="absolute top-0 right-0 bg-white border border-gray-300 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X size={10} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs text-gray-500">Параграфы</label>
+                        <button
+                            type="button"
+                            onClick={addParagraph}
+                            className="text-xs border border-dashed border-gray-400 px-2 py-0.5 text-gray-500 hover:border-gray-600 hover:text-gray-700"
+                        >
+                            <Plus size={10} className="inline" /> Добавить
+                        </button>
+                    </div>
+                    <div className="space-y-2">
+                        {form.paragraphs.map((p, i) => (
+                            <div key={i} className="border border-gray-200 p-3 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => updateParagraph(i, "paragraph_type", p.paragraph_type === "front" ? "detail" : "front")}
+                                            className={`text-[10px] px-2 py-0.5 border ${
+                                                p.paragraph_type === "front"
+                                                    ? "border-gray-800 font-medium"
+                                                    : "border-gray-300 text-gray-500"
+                                            }`}
+                                        >
+                                            {p.paragraph_type === "front" ? "Основной" : "Подробность"}
+                                        </button>
+                                    </div>
+                                    <button type="button" onClick={() => removeParagraph(i)} className="text-gray-400 hover:text-gray-700">
+                                        <Trash2 size={12} />
+                                    </button>
+                                </div>
+                                <input
+                                    placeholder="Заголовок"
+                                    value={p.label}
+                                    onChange={(e) => updateParagraph(i, "label", e.target.value)}
+                                    className="w-full border border-gray-300 px-2 py-1 text-sm"
+                                />
+                                <textarea
+                                    placeholder="Текст"
+                                    value={p.text}
+                                    onChange={(e) => updateParagraph(i, "text", e.target.value)}
+                                    rows={3}
+                                    className="w-full border border-gray-300 px-2 py-1 text-sm resize-y"
+                                />
+                                <div className="flex items-center gap-2">
+                                    {p.photoUrl ? (
+                                        <div className="relative w-16 h-16 border border-gray-200 group">
+                                            <img
+                                                src={p.photoUrl}
+                                                alt=""
+                                                className="w-full h-full object-cover cursor-pointer"
+                                                onClick={() => setLightboxSrc(p.photoUrl)}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeParagraphPhoto(i)}
+                                                className="absolute top-0 right-0 bg-white border border-gray-300 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X size={10} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => paragraphPhotoRefs.current[i]?.click()}
+                                            className="text-xs border border-dashed border-gray-300 px-2 py-1 text-gray-400 hover:border-gray-500 hover:text-gray-600 flex items-center gap-1"
+                                        >
+                                            <Image size={10} /> Фото
+                                        </button>
+                                    )}
+                                    <input
+                                        ref={(el) => { paragraphPhotoRefs.current[i] = el; }}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => { handleParagraphPhoto(i, e.target.files[0]); e.target.value = ""; }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Теги</label>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                        {form.tags.map((t, i) => (
+                            <span key={i} className="text-xs border border-gray-300 px-2 py-0.5 flex items-center gap-1">
+                                {t}
+                                <button type="button" onClick={() => removeTag(i)} className="text-gray-400 hover:text-gray-700">
+                                    <X size={8} />
+                                </button>
+                            </span>
+                        ))}
+                    </div>
+                    <input
+                        placeholder="Добавить тег (Enter)"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
+                        className="w-full border border-gray-300 px-2 py-1.5 text-sm"
+                    />
+                </div>
+
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => { sessionStorage.removeItem(SESSION_KEY); navigate("/textbooks/manage"); }}
+                        className="flex-1 text-sm border border-gray-300 py-1.5 hover:bg-gray-50"
+                    >
+                        Отмена
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={saving}
+                        className="flex-1 text-sm border border-gray-800 py-1.5 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                        {saving ? "Сохранение..." : isEdit ? "Сохранить" : "Создать"}
+                    </button>
+                </div>
+            </form>
+
+            {lightboxSrc && <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />}
+        </div>
+    );
 }

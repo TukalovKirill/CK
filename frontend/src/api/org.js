@@ -10,6 +10,7 @@ export const getDepartments = (params) => axiosInstance.get("departments/", { pa
 export const createDepartment = (data) => axiosInstance.post("departments/", data);
 export const updateDepartment = (id, data) => axiosInstance.patch(`departments/${id}/`, data);
 export const deleteDepartment = (id) => axiosInstance.delete(`departments/${id}/`);
+export const reorderDepartments = (ids) => axiosInstance.post("departments/reorder/", { ids });
 
 export const getOrgRoles = (params) => axiosInstance.get("org-roles/", { params });
 export const createOrgRole = (data) => axiosInstance.post("org-roles/", data);
@@ -23,3 +24,8 @@ export const getEmployee = (id) => axiosInstance.get(`employees/${id}/`);
 export const deleteEmployee = (id) => axiosInstance.delete(`employees/${id}/`);
 
 export const getOrgPermissions = () => axiosInstance.get("org-permissions/");
+
+export const getZones = (params) => axiosInstance.get("zones/", { params });
+export const createZone = (data) => axiosInstance.post("zones/", data);
+export const updateZone = (id, data) => axiosInstance.patch(`zones/${id}/`, data);
+export const deleteZone = (id) => axiosInstance.delete(`zones/${id}/`);
