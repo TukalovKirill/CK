@@ -1,13 +1,13 @@
 import json
 
-from channels.generic.websocket import AsyncJsonWebSocketConsumer
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from urllib.parse import parse_qs
 
 from rest_framework_simplejwt.tokens import AccessToken
 
 
-class CompanyUpdatesConsumer(AsyncJsonWebSocketConsumer):
+class CompanyUpdatesConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         query = parse_qs(self.scope["query_string"].decode())
         token_str = query.get("token", [None])[0]
