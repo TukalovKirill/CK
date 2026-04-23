@@ -159,6 +159,11 @@ jobs:
           command_timeout: 10m
           script: |
             set -e
+
+            if [ ! -d "${{ env.APP_DIR }}/.git" ]; then
+              git clone https://github.com/TukalovKirill/CK.git ${{ env.APP_DIR }}
+            fi
+
             cd ${{ env.APP_DIR }}
             git pull origin main
 
