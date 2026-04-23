@@ -1,12 +1,155 @@
-name: Deploy to server
+name: CI / Deploy
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
 
 jobs:
-  deploy:
+  # ─────────────────────────────────────
+  # Backend: migrate + system check
+  # ─────────────────────────────────────
+  backend:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ck_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      SECRET_KEY: ci-test-secret-key
+      DEBUG: "1"
+      DB_NAME: ck_test
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: localhost
+      DB_PORT: "5432"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Run migrations
+        run: python backend/manage.py migrate --no-input
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings
+
+      - name: Django system check
+        run: python backend/manage.py check --deploy --fail-level WARNING
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings
+          DEBUG: "0"
+
+      - name: Collect static files
+        run: python backend/manage.py collectstatic --no-input
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings
+
+      # - name: Run tests
+      #   run: python backend/manage.py test --verbosity=2
+
+  # ─────────────────────────────────────
+  # Frontend: install + build
+  # ─────────────────────────────────────
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+        env:
+          VITE_API_BASE: /api/
+
+  # ─────────────────────────────────────
+  # Detect changes for conditional deploy
+  # ─────────────────────────────────────
+  changes:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      infra: ${{ steps.filter.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+            infra:
+              - '.github/workflows/**'
+              - 'docker-compose.yml'
+              - 'deploy.sh'
+
+  # ─────────────────────────────────────
+  # Deploy: pull + build + zero-downtime restart
+  # ─────────────────────────────────────
+  deploy:
+    needs: [backend, frontend, changes]
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name != 'pull_request' &&
+      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.infra == 'true' || github.event_name == 'workflow_dispatch')
+
+    env:
+      APP_DIR: /opt/ck
+
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
@@ -14,9 +157,49 @@ jobs:
           host: 147.45.150.208
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 10m
           script: |
-            cd /opt/ck
+            set -e
+            cd ${{ env.APP_DIR }}
             git pull origin main
-            docker compose build
-            docker compose up -d
-            docker image prune -f
+
+            sed -i 's/\r$//' deploy.sh 2>/dev/null || true
+            chmod +x deploy.sh
+            ./deploy.sh
+
+  # ─────────────────────────────────────
+  # Health check
+  # ─────────────────────────────────────
+  health-check:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: needs.deploy.result == 'success'
+
+    steps:
+      - name: Check backend health
+        run: |
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://147.45.150.208:8082/api/auth/login/" 2>/dev/null) || STATUS="000"
+            echo "Attempt $i: HTTP $STATUS"
+            if [ "$STATUS" != "000" ]; then
+              echo "Backend is healthy (HTTP $STATUS)"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Backend health check failed"
+          exit 1
+
+      - name: Check frontend health
+        run: |
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://147.45.150.208:8082/" 2>/dev/null) || STATUS="000"
+            echo "Attempt $i: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "Frontend is healthy"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Frontend health check failed"
+          exit 1
