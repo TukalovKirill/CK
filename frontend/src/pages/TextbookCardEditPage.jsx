@@ -2,17 +2,17 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import {
     getCard, createCard, updateCard, getSections, getCategories,
-    uploadCardPhoto, deleteCardPhoto, uploadParagraphPhoto, deleteParagraphPhoto,
+    uploadCardPhoto, deleteCardPhoto, uploadParagraphPhoto,
 } from "../api/textbooks";
 import useSessionState from "../hooks/useSessionState";
 import Lightbox from "../components/Lightbox";
 import toast from "react-hot-toast";
-import { Plus, Trash2, ArrowLeft, Upload, Image, X, GripVertical } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Upload, Image, X } from "lucide-react";
 
 const SESSION_KEY = "tb_cardEditForm";
 
 function emptyForm() {
-    return { name: "", section: "", category: "", paragraphs: [], tags: [], newPhotos: [], existingPhotos: [] };
+    return { name: "", section: "", category: "", paragraphs: [], tags: [], existingPhotos: [] };
 }
 
 export default function TextbookCardEditPage() {
@@ -21,6 +21,8 @@ export default function TextbookCardEditPage() {
     const navigate = useNavigate();
 
     const [form, setForm] = useSessionState(SESSION_KEY, emptyForm());
+    const [newCardPhotos, setNewCardPhotos] = useState([]);
+    const [newParagraphPhotos, setNewParagraphPhotos] = useState({});
     const [tagInput, setTagInput] = useState("");
     const [sections, setSections] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -54,16 +56,18 @@ export default function TextbookCardEditPage() {
                             order: p.order,
                             has_photo: Boolean(p.photo),
                             photoUrl: p.photo || null,
-                            newPhoto: null,
                         })) || [],
                         tags: card.tags?.map((t) => t.tag) || [],
-                        newPhotos: [],
                         existingPhotos: card.photos?.map((p) => ({ id: p.id, file: p.file })) || [],
                     });
+                    setNewCardPhotos([]);
+                    setNewParagraphPhotos({});
                     setLoadedId(id);
                 } else if (!isEdit && loadedId !== "new") {
                     const cached = sessionStorage.getItem(SESSION_KEY);
                     if (!cached) setForm(emptyForm());
+                    setNewCardPhotos([]);
+                    setNewParagraphPhotos({});
                     setLoadedId("new");
                 }
             } catch {
@@ -81,7 +85,7 @@ export default function TextbookCardEditPage() {
         updateForm({
             paragraphs: [...form.paragraphs, {
                 paragraph_type: "front", label: "", text: "", order: form.paragraphs.length,
-                has_photo: false, photoUrl: null, newPhoto: null,
+                has_photo: false, photoUrl: null,
             }],
         });
     };
@@ -94,19 +98,36 @@ export default function TextbookCardEditPage() {
 
     const removeParagraph = (i) => {
         updateForm({ paragraphs: form.paragraphs.filter((_, j) => j !== i) });
+        setNewParagraphPhotos((prev) => {
+            const copy = { ...prev };
+            delete copy[i];
+            const shifted = {};
+            for (const [k, v] of Object.entries(copy)) {
+                const idx = Number(k);
+                shifted[idx > i ? idx - 1 : idx] = v;
+            }
+            return shifted;
+        });
     };
 
     const handleParagraphPhoto = (i, file) => {
         if (!file) return;
+        const preview = URL.createObjectURL(file);
         const copy = [...form.paragraphs];
-        copy[i] = { ...copy[i], has_photo: true, newPhoto: file, photoUrl: URL.createObjectURL(file) };
+        copy[i] = { ...copy[i], has_photo: true, photoUrl: preview };
         updateForm({ paragraphs: copy });
+        setNewParagraphPhotos((prev) => ({ ...prev, [i]: file }));
     };
 
     const removeParagraphPhoto = (i) => {
         const copy = [...form.paragraphs];
-        copy[i] = { ...copy[i], has_photo: false, newPhoto: null, photoUrl: null };
+        copy[i] = { ...copy[i], has_photo: false, photoUrl: null };
         updateForm({ paragraphs: copy });
+        setNewParagraphPhotos((prev) => {
+            const next = { ...prev };
+            delete next[i];
+            return next;
+        });
     };
 
     const addTag = () => {
@@ -126,11 +147,11 @@ export default function TextbookCardEditPage() {
             file: f,
             preview: URL.createObjectURL(f),
         }));
-        updateForm({ newPhotos: [...(form.newPhotos || []), ...items] });
+        setNewCardPhotos((prev) => [...prev, ...items]);
     };
 
     const removeNewPhoto = (i) => {
-        updateForm({ newPhotos: form.newPhotos.filter((_, j) => j !== i) });
+        setNewCardPhotos((prev) => prev.filter((_, j) => j !== i));
     };
 
     const removeExistingPhoto = async (photoId) => {
@@ -170,27 +191,29 @@ export default function TextbookCardEditPage() {
             if (isEdit) {
                 await updateCard(id, data);
                 cardId = id;
-                toast.success("Сохранено");
             } else {
                 const res = await createCard(data);
                 cardId = res.data.id;
-                toast.success("Создано");
             }
 
-            for (const np of (form.newPhotos || [])) {
+            for (const np of newCardPhotos) {
                 await uploadCardPhoto(cardId, np.file);
             }
 
-            const cardRes = await getCard(cardId);
-            const savedParagraphs = cardRes.data.paragraphs || [];
-            for (let i = 0; i < form.paragraphs.length; i++) {
-                const p = form.paragraphs[i];
-                if (p.newPhoto && savedParagraphs[i]) {
-                    await uploadParagraphPhoto(savedParagraphs[i].id, p.newPhoto);
+            const paraPhotoKeys = Object.keys(newParagraphPhotos);
+            if (paraPhotoKeys.length > 0) {
+                const cardRes = await getCard(cardId);
+                const savedParagraphs = cardRes.data.paragraphs || [];
+                for (const key of paraPhotoKeys) {
+                    const idx = Number(key);
+                    if (savedParagraphs[idx]) {
+                        await uploadParagraphPhoto(savedParagraphs[idx].id, newParagraphPhotos[key]);
+                    }
                 }
             }
 
             sessionStorage.removeItem(SESSION_KEY);
+            toast.success(isEdit ? "Сохранено" : "Создано");
             navigate("/textbooks/manage");
         } catch {
             toast.error("Ошибка сохранения");
@@ -268,7 +291,7 @@ export default function TextbookCardEditPage() {
                         className="hidden"
                         onChange={(e) => { if (e.target.files.length) handlePhotoFiles(e.target.files); e.target.value = ""; }}
                     />
-                    {((form.existingPhotos?.length || 0) + (form.newPhotos?.length || 0)) > 0 && (
+                    {((form.existingPhotos?.length || 0) + newCardPhotos.length) > 0 && (
                         <div className="flex gap-2 mt-2 flex-wrap">
                             {form.existingPhotos?.map((p) => (
                                 <div key={p.id} className="relative w-20 h-20 border border-gray-200 group">
@@ -287,7 +310,7 @@ export default function TextbookCardEditPage() {
                                     </button>
                                 </div>
                             ))}
-                            {form.newPhotos?.map((p, i) => (
+                            {newCardPhotos.map((p, i) => (
                                 <div key={`new-${i}`} className="relative w-20 h-20 border border-gray-200 group">
                                     <img src={p.preview} alt="" className="w-full h-full object-cover" />
                                     <button
@@ -318,19 +341,17 @@ export default function TextbookCardEditPage() {
                         {form.paragraphs.map((p, i) => (
                             <div key={i} className="border border-gray-200 p-3 space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => updateParagraph(i, "paragraph_type", p.paragraph_type === "front" ? "detail" : "front")}
-                                            className={`text-[10px] px-2 py-0.5 border ${
-                                                p.paragraph_type === "front"
-                                                    ? "border-gray-800 font-medium"
-                                                    : "border-gray-300 text-gray-500"
-                                            }`}
-                                        >
-                                            {p.paragraph_type === "front" ? "Основной" : "Подробность"}
-                                        </button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => updateParagraph(i, "paragraph_type", p.paragraph_type === "front" ? "detail" : "front")}
+                                        className={`text-[10px] px-2 py-0.5 border ${
+                                            p.paragraph_type === "front"
+                                                ? "border-gray-800 font-medium"
+                                                : "border-gray-300 text-gray-500"
+                                        }`}
+                                    >
+                                        {p.paragraph_type === "front" ? "Основной" : "Подробность"}
+                                    </button>
                                     <button type="button" onClick={() => removeParagraph(i)} className="text-gray-400 hover:text-gray-700">
                                         <Trash2 size={12} />
                                     </button>
