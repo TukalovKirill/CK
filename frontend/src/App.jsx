@@ -1,0 +1,41 @@
+import { Routes, Route, Navigate } from "react-router-dom";
+import RequireAuth from "./components/RequireAuth";
+import PublicOnly from "./components/PublicOnly";
+import Layout from "./components/Layout";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import AcceptInvitePage from "./pages/AcceptInvitePage";
+import ProfilePage from "./pages/ProfilePage";
+import TeamPage from "./pages/TeamPage";
+import OrgStructurePage from "./pages/OrgStructurePage";
+import TextbooksPage from "./pages/TextbooksPage";
+import TextbookCardPage from "./pages/TextbookCardPage";
+import TextbookManagePage from "./pages/TextbookManagePage";
+import TextbookCardEditPage from "./pages/TextbookCardEditPage";
+import TextbookAssignmentsPage from "./pages/TextbookAssignmentsPage";
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
+      <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
+      <Route path="/invite/:token" element={<AcceptInvitePage />} />
+
+      <Route element={<RequireAuth />}>
+        <Route element={<Layout />}>
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/team" element={<TeamPage />} />
+          <Route path="/org" element={<OrgStructurePage />} />
+          <Route path="/textbooks" element={<TextbooksPage />} />
+          <Route path="/textbooks/card/:id" element={<TextbookCardPage />} />
+          <Route path="/textbooks/manage" element={<TextbookManagePage />} />
+          <Route path="/textbooks/manage/card/new" element={<TextbookCardEditPage />} />
+          <Route path="/textbooks/manage/card/:id/edit" element={<TextbookCardEditPage />} />
+          <Route path="/textbooks/manage/assignments" element={<TextbookAssignmentsPage />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<Navigate to="/profile" replace />} />
+    </Routes>
+  );
+}
