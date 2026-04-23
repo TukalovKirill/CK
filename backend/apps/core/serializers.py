@@ -95,7 +95,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         codes = _get_user_permission_codes(obj)
         if codes is None:
-            return list(OrgPermission.objects.values_list("code", flat=True))
+            return None
         return list(codes)
 
     def get_unit_permissions(self, obj):
