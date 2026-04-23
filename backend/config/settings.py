@@ -128,6 +128,7 @@ SIMPLE_JWT = {
 # --- CORS ---
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173")).split(",")
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
