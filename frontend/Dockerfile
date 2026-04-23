@@ -6,6 +6,10 @@ COPY package.json package-lock.json* ./
 RUN npm install
 
 COPY . .
+
+ENV VITE_API_BASE=/api/
+ENV VITE_WS_BASE=
+
 RUN npm run build
 
 FROM nginx:alpine

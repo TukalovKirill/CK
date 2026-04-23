@@ -8,7 +8,8 @@ export default function useRealtimeUpdates(entities, callback) {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
-    const wsBase = import.meta.env.VITE_WS_BASE || "ws://localhost:8000";
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsBase = import.meta.env.VITE_WS_BASE || `${proto}//${window.location.host}`;
     const ws = new WebSocket(`${wsBase}/ws/updates/?token=${token}`);
 
     ws.onmessage = (event) => {
