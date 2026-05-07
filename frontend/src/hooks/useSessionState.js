@@ -1,23 +1,39 @@
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 
 export default function useSessionState(key, defaultValue) {
+  const storageKey = `ss:${key}`;
+  const isFirstRender = useRef(true);
+
   const [value, setValue] = useState(() => {
     try {
-      const saved = sessionStorage.getItem(key);
+      const saved = sessionStorage.getItem(storageKey);
       return saved !== null ? JSON.parse(saved) : defaultValue;
     } catch {
       return defaultValue;
     }
   });
 
-  const setSessionValue = (newValue) => {
-    setValue(newValue);
-    try {
-      sessionStorage.setItem(key, JSON.stringify(newValue));
-    } catch {
-      // ignore
-    }
-  };
+  const setSessionValue = useCallback(
+    (newValue) => {
+      setValue((prev) => {
+        const resolved = typeof newValue === "function" ? newValue(prev) : newValue;
+        try {
+          sessionStorage.setItem(storageKey, JSON.stringify(resolved));
+        } catch { /* ignore */ }
+        return resolved;
+      });
+    },
+    [storageKey],
+  );
 
-  return [value, setSessionValue];
+  const clearValue = useCallback(() => {
+    sessionStorage.removeItem(storageKey);
+    setValue(defaultValue);
+  }, [storageKey, defaultValue]);
+
+  if (isFirstRender.current) {
+    isFirstRender.current = false;
+  }
+
+  return [value, setSessionValue, clearValue];
 }

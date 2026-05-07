@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from .views import (
@@ -23,4 +23,5 @@ router.register("assignments", CardAssignmentViewSet, basename="card-assignment"
 urlpatterns = [
     path("settings/", TextbookSettingsView.as_view()),
     path("search/", SearchView.as_view()),
+    path("quizzes/", include("apps.textbooks.quiz_urls")),
 ] + router.urls

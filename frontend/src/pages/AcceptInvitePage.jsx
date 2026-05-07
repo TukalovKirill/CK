@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { acceptInvite } from "../api/auth";
 import toast from "react-hot-toast";
 
@@ -12,11 +13,17 @@ export default function AcceptInvitePage() {
     password: "", password2: "", birth_date: "", agree: false,
   });
   const [loading, setLoading] = useState(false);
+  const [show1, setShow1] = useState(false);
+  const [show2, setShow2] = useState(false);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!/^(?=.*[A-Za-z])(?=.*\d)[\S]{8,}$/.test(form.password)) {
+      toast.error("Пароль: минимум 8 символов, буква и цифра");
+      return;
+    }
     if (form.password !== form.password2) {
       toast.error("Пароли не совпадают");
       return;
@@ -47,28 +54,74 @@ export default function AcceptInvitePage() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">Ссылка недействительна</p>
+      <div className="auth-shell dark-texture">
+        <div className="auth-card mx-auto max-w-lg text-center">
+          <p style={{ color: "var(--n-accent)" }}>Ссылка недействительна</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-sm w-full max-w-sm space-y-3">
-        <h1 className="text-xl font-bold text-center">Принятие приглашения</h1>
-        <input type="password" placeholder="Пароль" value={form.password} onChange={set("password")} required minLength={8}
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <input type="password" placeholder="Подтверждение пароля" value={form.password2} onChange={set("password2")} required
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <input type="date" placeholder="Дата рождения" value={form.birth_date} onChange={set("birth_date")}
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          <input type="checkbox" checked={form.agree} onChange={set("agree")} />
+    <div className="auth-shell dark-texture">
+      <form onSubmit={handleSubmit} className="auth-card mx-auto max-w-lg space-y-4">
+        <h1 className="text-xl font-bold text-center" style={{ color: "var(--n-fg)" }}>Принятие приглашения</h1>
+
+        <div className="relative">
+          <input
+            type={show1 ? "text" : "password"}
+            placeholder="Пароль"
+            value={form.password}
+            onChange={set("password")}
+            required
+            minLength={8}
+            className="input-premium w-full pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShow1(!show1)}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
+            style={{ color: "var(--n-dim)" }}
+          >
+            {show1 ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+
+        <div className="relative">
+          <input
+            type={show2 ? "text" : "password"}
+            placeholder="Подтверждение пароля"
+            value={form.password2}
+            onChange={set("password2")}
+            required
+            className="input-premium w-full pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShow2(!show2)}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
+            style={{ color: "var(--n-dim)" }}
+          >
+            {show2 ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+
+        <div>
+          <label className="block text-sm mb-1" style={{ color: "var(--n-muted)" }}>Дата рождения</label>
+          <input
+            type="date"
+            value={form.birth_date}
+            onChange={set("birth_date")}
+            className="input-premium w-full"
+          />
+        </div>
+
+        <label className="flex items-center gap-2 text-sm" style={{ color: "var(--n-muted)" }}>
+          <input type="checkbox" className="check-premium" checked={form.agree} onChange={set("agree")} />
           Согласие на обработку данных
         </label>
-        <button type="submit" disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+
+        <button type="submit" disabled={loading} className="btn-save w-full">
           {loading ? "Сохранение..." : "Принять приглашение"}
         </button>
       </form>

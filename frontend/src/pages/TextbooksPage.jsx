@@ -1,31 +1,34 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getMyAvailableCards, getSections, getCategories, searchCards } from "../api/textbooks";
 import { getUnits } from "../api/org";
 import { useAuth, hasPermission } from "../context/AuthContext";
 import useRealtimeUpdates from "../hooks/useRealtimeUpdates";
 import useSessionState from "../hooks/useSessionState";
-import { Search, Settings, Grid, List, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Settings, ChevronLeft, ChevronRight, X, BookOpen, LayoutGrid, GalleryHorizontalEnd } from "lucide-react";
 
 function CardItem({ card, onClick }) {
     return (
         <button
             onClick={onClick}
-            className="border border-gray-300 text-left w-full overflow-hidden hover:border-gray-500 transition-colors"
+            className="surface-panel !p-0 overflow-hidden text-left w-full hover:opacity-90 transition-opacity"
         >
             {card.first_photo ? (
                 <img src={card.first_photo} alt="" className="w-full h-28 object-cover" />
             ) : (
-                <div className="w-full h-28 bg-gray-50 flex items-center justify-center text-xs text-gray-400">
-                    Нет фото
+                <div
+                    className="w-full h-28 flex items-center justify-center"
+                    style={{ background: "var(--n-hover)" }}
+                >
+                    <BookOpen size={28} style={{ color: "var(--n-dim)" }} />
                 </div>
             )}
             <div className="p-2">
-                <p className="text-sm font-medium truncate">{card.name}</p>
+                <p className="text-sm font-medium truncate" style={{ color: "var(--n-fg)" }}>{card.name}</p>
                 {card.tags?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                         {card.tags.slice(0, 3).map((t, i) => (
-                            <span key={i} className="text-[10px] border border-gray-200 px-1 py-0.5">{t}</span>
+                            <span key={i} className="badge-muted">{t}</span>
                         ))}
                     </div>
                 )}
@@ -42,17 +45,25 @@ function CategoryCarousel({ cards, onCardClick }) {
     };
     return (
         <div className="relative group">
-            <button onClick={() => scroll(-1)} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 border border-gray-300 bg-white p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+                onClick={() => scroll(-1)}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: "var(--n-panel)", border: "1px solid var(--n-border)" }}
+            >
                 <ChevronLeft size={14} />
             </button>
-            <div ref={ref} className="flex gap-2 overflow-x-auto scrollbar-none py-1 px-1">
+            <div ref={ref} className="flex gap-2 overflow-x-auto no-scrollbar py-1 px-1">
                 {cards.map((card) => (
-                    <div key={card.id} className="flex-none w-40">
+                    <div key={card.id} className="flex-none w-[45vw] sm:w-[200px] lg:w-[220px] snap-start">
                         <CardItem card={card} onClick={() => onCardClick(card)} />
                     </div>
                 ))}
             </div>
-            <button onClick={() => scroll(1)} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 border border-gray-300 bg-white p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+                onClick={() => scroll(1)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: "var(--n-panel)", border: "1px solid var(--n-border)" }}
+            >
                 <ChevronRight size={14} />
             </button>
         </div>
@@ -70,10 +81,12 @@ export default function TextbooksPage() {
     const [cardsByUnit, setCardsByUnit] = useState({});
     const [loading, setLoading] = useState(true);
 
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useSessionState("tb:search", "");
     const [searchResults, setSearchResults] = useState(null);
-    const [viewMode, setViewMode] = useSessionState("tb_viewMode", "grid");
-    const [activeSection, setActiveSection] = useSessionState("tb_activeSection", {});
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [viewMode, setViewModeState] = useState(() => localStorage.getItem("textbooks_view_mode") || "grid");
+    const setViewMode = (m) => { setViewModeState(m); localStorage.setItem("textbooks_view_mode", m); };
+    const [activeSection, setActiveSection] = useSessionState("tb:activeSection", {});
 
     const isFullAccess = !user?.permissions || user.permissions === null;
 
@@ -119,12 +132,15 @@ export default function TextbooksPage() {
 
     useEffect(() => {
         if (searchQuery.length < 2) { setSearchResults(null); return; }
+        setSearchLoading(true);
         const t = setTimeout(async () => {
             try {
                 const res = await searchCards({ q: searchQuery });
                 setSearchResults(res.data);
             } catch {
                 setSearchResults([]);
+            } finally {
+                setSearchLoading(false);
             }
         }, 300);
         return () => clearTimeout(t);
@@ -135,133 +151,165 @@ export default function TextbooksPage() {
         navigate(`/textbooks/card/${card.id}`);
     };
 
-    if (loading) return <p className="text-center py-8 text-gray-500">Загрузка...</p>;
-
-    if (searchResults) {
+    if (loading) {
         return (
-            <div className="max-w-4xl mx-auto">
-                <Header canEdit={canEdit} searchQuery={searchQuery} setSearchQuery={setSearchQuery} viewMode={viewMode} setViewMode={setViewMode} />
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    {searchResults.map((card) => (
-                        <CardItem key={card.id} card={card} onClick={() => goToCard(card)} />
-                    ))}
-                </div>
-                {searchResults.length === 0 && <p className="text-sm text-gray-500 text-center py-8">Ничего не найдено</p>}
+            <div className="page-shell page-stack">
+                <div className="surface-empty">Загрузка...</div>
             </div>
         );
     }
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <Header canEdit={canEdit} searchQuery={searchQuery} setSearchQuery={setSearchQuery} viewMode={viewMode} setViewMode={setViewMode} />
-
-            {units.map((unit) => {
-                const unitCards = cardsByUnit[unit.id] || [];
-                const unitSectionIds = [...new Set(unitCards.map((c) => c.section).filter(Boolean))];
-                const unitSections = sections.filter((s) => unitSectionIds.includes(s.id));
-                const currentSection = activeSection[unit.id] || unitSections[0]?.id;
-                const sectionCards = unitCards.filter((c) => c.section === currentSection);
-                const sectionCategories = categories.filter((cat) =>
-                    sectionCards.some((c) => c.category === cat.id),
-                );
-                const uncategorized = sectionCards.filter((c) => !c.category);
-
-                return (
-                    <div key={unit.id} className="mb-6">
-                        <h2 className="text-sm font-medium mb-2 border-b border-gray-300 pb-1">{unit.name}</h2>
-
-                        {unitSections.length > 1 && (
-                            <div className="flex gap-1 mb-3 overflow-x-auto">
-                                {unitSections.map((s) => (
-                                    <button
-                                        key={s.id}
-                                        onClick={() => setActiveSection({ ...activeSection, [unit.id]: s.id })}
-                                        className={`px-3 py-1 text-xs border whitespace-nowrap ${
-                                            currentSection === s.id
-                                                ? "border-gray-800 font-medium"
-                                                : "border-gray-300 text-gray-600"
-                                        }`}
-                                    >
-                                        {s.name}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {sectionCategories.map((cat) => {
-                            const catCards = sectionCards.filter((c) => c.category === cat.id);
-                            if (catCards.length === 0) return null;
-                            return (
-                                <div key={cat.id} className="mb-3">
-                                    <h3 className="text-xs text-gray-600 mb-1">{cat.name}</h3>
-                                    {viewMode === "carousel" ? (
-                                        <CategoryCarousel cards={catCards} onCardClick={goToCard} />
-                                    ) : (
-                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                                            {catCards.map((card) => (
-                                                <CardItem key={card.id} card={card} onClick={() => goToCard(card)} />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-
-                        {uncategorized.length > 0 && (
-                            <div className="mb-3">
-                                {viewMode === "carousel" ? (
-                                    <CategoryCarousel cards={uncategorized} onCardClick={goToCard} />
-                                ) : (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                                        {uncategorized.map((card) => (
-                                            <CardItem key={card.id} card={card} onClick={() => goToCard(card)} />
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {unitCards.length === 0 && (
-                            <p className="text-xs text-gray-400 py-2">Нет назначенных карточек</p>
-                        )}
-                    </div>
-                );
-            })}
-
-            {units.length === 0 && <p className="text-sm text-gray-500 text-center py-8">Нет доступных юнитов</p>}
-        </div>
-    );
-}
-
-function Header({ canEdit, searchQuery, setSearchQuery, viewMode, setViewMode }) {
-    return (
-        <>
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-lg font-semibold">Учебники</h1>
+        <div className="page-shell page-stack">
+            {/* Header */}
+            <div className="page-header">
+                <div>
+                    <h1 className="page-title">Мои учебники</h1>
+                </div>
                 <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setViewMode(viewMode === "grid" ? "carousel" : "grid")}
-                        className="p-1 border border-gray-300 hover:bg-gray-50"
-                        title={viewMode === "grid" ? "Карусель" : "Плитка"}
-                    >
-                        {viewMode === "grid" ? <List size={14} /> : <Grid size={14} />}
-                    </button>
+                    <div className="schedule-segmented">
+                        <button
+                            className={`schedule-segmented__button ${viewMode === "grid" ? "active" : ""}`}
+                            onClick={() => setViewMode("grid")}
+                        >
+                            <span className="schedule-segmented__inner"><LayoutGrid size={14} /></span>
+                        </button>
+                        <button
+                            className={`schedule-segmented__button ${viewMode === "carousel" ? "active" : ""}`}
+                            onClick={() => setViewMode("carousel")}
+                        >
+                            <span className="schedule-segmented__inner"><GalleryHorizontalEnd size={14} /></span>
+                        </button>
+                    </div>
                     {canEdit && (
-                        <Link to="/textbooks/manage" className="flex items-center gap-1 text-sm border border-gray-300 px-2 py-1 hover:bg-gray-50">
+                        <Link to="/textbooks/manage" className="btn-surface flex items-center gap-1">
                             <Settings size={14} /> Управление
                         </Link>
                     )}
                 </div>
             </div>
-            <div className="relative mb-4">
-                <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+
+            {/* Search */}
+            <div className="surface-toolbar relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--n-muted)" }} />
                 <input
                     placeholder="Поиск..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full border border-gray-300 pl-7 pr-2 py-1.5 text-sm"
+                    className="input-premium w-full pl-8 pr-8"
                 />
+                {searchLoading && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-xs" style={{ color: "var(--n-muted)" }}>⏳</span>
+                )}
+                {!searchLoading && searchQuery.length > 0 && (
+                    <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                        style={{ color: "var(--n-muted)" }}
+                    >
+                        <X size={14} />
+                    </button>
+                )}
             </div>
-        </>
+
+            {/* Search results overlay */}
+            {searchResults !== null && (
+                <div>
+                    {searchResults.length === 0 ? (
+                        <div className="surface-empty">Ничего не найдено</div>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {searchResults.map((card) => (
+                                <CardItem key={card.id} card={card} onClick={() => goToCard(card)} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Main content */}
+            {searchResults === null && (
+                <>
+                    {units.map((unit) => {
+                        const unitCards = cardsByUnit[unit.id] || [];
+                        const unitSectionIds = [...new Set(unitCards.map((c) => c.section).filter(Boolean))];
+                        const unitSections = sections.filter((s) => unitSectionIds.includes(s.id));
+                        const currentSection = activeSection[unit.id] || unitSections[0]?.id;
+                        const sectionCards = unitCards.filter((c) => c.section === currentSection);
+                        const sectionCategories = categories.filter((cat) =>
+                            sectionCards.some((c) => c.category === cat.id),
+                        );
+                        const uncategorized = sectionCards.filter((c) => !c.category);
+
+                        return (
+                            <div key={unit.id} className="mb-6">
+                                <h2 className="section-title">{unit.name}</h2>
+
+                                {unitSections.length > 1 && (
+                                    <div className="flex gap-1 mb-3 overflow-x-auto no-scrollbar border-b" style={{ borderColor: "var(--n-border)" }}>
+                                        {unitSections.map((s) => (
+                                            <button
+                                                key={s.id}
+                                                onClick={() => setActiveSection({ ...activeSection, [unit.id]: s.id })}
+                                                className={`px-3 py-1.5 text-xs whitespace-nowrap transition-colors border-b-2 ${
+                                                    currentSection === s.id ? "font-medium" : ""
+                                                }`}
+                                                style={{
+                                                    color: currentSection === s.id ? "var(--n-accent)" : "var(--n-muted)",
+                                                    borderColor: currentSection === s.id ? "var(--n-accent)" : "transparent",
+                                                }}
+                                            >
+                                                {s.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {sectionCategories.map((cat) => {
+                                    const catCards = sectionCards.filter((c) => c.category === cat.id);
+                                    if (catCards.length === 0) return null;
+                                    return (
+                                        <div key={cat.id} className="mb-3">
+                                            <h3 className="text-secondary text-xs mb-2">{cat.name}</h3>
+                                            {viewMode === "carousel" ? (
+                                                <CategoryCarousel cards={catCards} onCardClick={goToCard} />
+                                            ) : (
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                                    {catCards.map((card) => (
+                                                        <CardItem key={card.id} card={card} onClick={() => goToCard(card)} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+
+                                {uncategorized.length > 0 && (
+                                    <div className="mb-3">
+                                        {viewMode === "carousel" ? (
+                                            <CategoryCarousel cards={uncategorized} onCardClick={goToCard} />
+                                        ) : (
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                                {uncategorized.map((card) => (
+                                                    <CardItem key={card.id} card={card} onClick={() => goToCard(card)} />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {unitCards.length === 0 && (
+                                    <div className="surface-empty">Нет назначенных карточек</div>
+                                )}
+                            </div>
+                        );
+                    })}
+
+                    {units.length === 0 && (
+                        <div className="surface-empty">Нет доступных юнитов</div>
+                    )}
+                </>
+            )}
+        </div>
     );
 }

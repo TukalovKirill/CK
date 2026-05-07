@@ -27,16 +27,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-sm w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-bold text-center">Вход</h1>
+    <div className="auth-shell dark-texture">
+      <form onSubmit={handleSubmit} className="auth-card mx-auto max-w-lg space-y-4">
+        <h1 className="text-xl font-bold text-center" style={{ color: "var(--n-fg)" }}>Вход</h1>
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input-premium w-full"
         />
         <input
           type="password"
@@ -44,18 +44,18 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input-premium w-full"
         />
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="btn-save w-full"
         >
           {loading ? "Вход..." : "Войти"}
         </button>
-        <p className="text-sm text-center text-gray-500">
+        <p className="text-sm text-center" style={{ color: "var(--n-muted)" }}>
           Нет аккаунта?{" "}
-          <Link to="/register" className="text-blue-600 hover:underline">
+          <Link to="/register" className="hover:underline" style={{ color: "var(--n-accent)" }}>
             Зарегистрироваться
           </Link>
         </p>

@@ -6,12 +6,19 @@ import {
 } from "../api/textbooks";
 import { getUnits, getDepartments, getOrgRoles } from "../api/org";
 import useRealtimeUpdates from "../hooks/useRealtimeUpdates";
-import Modal from "../components/Modal";
+import useSessionState from "../hooks/useSessionState";
 import AnimatedCollapse from "../components/AnimatedCollapse";
+import Dropdown from "../components/Dropdown";
+import { useDialog } from "../components/DialogProvider";
 import toast from "react-hot-toast";
-import { ArrowLeft, ChevronRight, Plus, Trash2, Search, Check } from "lucide-react";
+import {
+    ArrowLeft, ChevronRight, ChevronDown, Plus, Trash2, Search, Check,
+    Building2, FolderClosed, Shield,
+} from "lucide-react";
 
 export default function TextbookAssignmentsPage() {
+    const dialog = useDialog();
+
     const [units, setUnits] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [roles, setRoles] = useState([]);
@@ -21,9 +28,9 @@ export default function TextbookAssignmentsPage() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const [expandedUnits, setExpandedUnits] = useState({});
-    const [expandedDepts, setExpandedDepts] = useState({});
-    const [filterUnit, setFilterUnit] = useState("");
+    const [filters, setFilters] = useSessionState("tbAssign:filters", { unit: "" });
+    const [expanded, setExpanded] = useSessionState("tbAssign:expanded", {});
+    const [assignModal, setAssignModal] = useSessionState("tbAssign:modal", null);
 
     const [modalOpen, setModalOpen] = useState(false);
     const [modalTarget, setModalTarget] = useState(null);
@@ -55,8 +62,10 @@ export default function TextbookAssignmentsPage() {
     useEffect(() => { loadAll(); }, []);
     useRealtimeUpdates(["textbook_card"], loadAll);
 
-    const toggleUnit = (id) => setExpandedUnits((prev) => ({ ...prev, [id]: !prev[id] }));
-    const toggleDept = (id) => setExpandedDepts((prev) => ({ ...prev, [id]: !prev[id] }));
+    const toggleUnit = (id) =>
+        setExpanded((prev) => ({ ...prev, [`u_${id}`]: !prev[`u_${id}`] }));
+    const toggleDept = (id) =>
+        setExpanded((prev) => ({ ...prev, [`d_${id}`]: !prev[`d_${id}`] }));
 
     const getAssignmentsFor = (unitId, deptId, roleId) =>
         assignments.filter((a) => {
@@ -84,10 +93,16 @@ export default function TextbookAssignmentsPage() {
 
     const openAssignModal = (unitId, deptId, roleId) => {
         setModalTarget({ unit: unitId, department: deptId || null, org_role: roleId || null });
+        setAssignModal({ unit: unitId, department: deptId || null, org_role: roleId || null });
         setModalSearch("");
         setModalSection("");
         setModalCategory("");
         setModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setModalOpen(false);
+        setAssignModal(null);
     };
 
     const handleAssign = async (cardId) => {
@@ -113,7 +128,12 @@ export default function TextbookAssignmentsPage() {
     };
 
     const handleClear = async (unitId, deptId) => {
-        if (!confirm("Удалить все назначения этого уровня?")) return;
+        const ok = await dialog.confirm(
+            "Очистить назначения?",
+            "Все назначения этого уровня будут удалены.",
+            { destructive: true },
+        );
+        if (!ok) return;
         try {
             const data = { unit: unitId };
             if (deptId) data.department = deptId;
@@ -124,6 +144,7 @@ export default function TextbookAssignmentsPage() {
         }
     };
 
+    const filterUnit = filters.unit;
     const displayUnits = filterUnit ? units.filter((u) => u.id === Number(filterUnit)) : units;
 
     let modalCards = cards;
@@ -138,57 +159,77 @@ export default function TextbookAssignmentsPage() {
         ? categories.filter((c) => String(c.section) === modalSection)
         : categories;
 
-    if (loading) return <p className="text-center py-8 text-gray-500">Загрузка...</p>;
+    if (loading) {
+        return (
+            <div className="page-shell page-stack">
+                <div className="surface-empty">Загрузка...</div>
+            </div>
+        );
+    }
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-                <Link to="/textbooks/manage" className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900">
-                    <ArrowLeft size={14} /> Управление
+        <div className="page-shell page-stack">
+            {/* Header */}
+            <div className="page-header">
+                <Link to="/textbooks/manage" className="btn-ghost">
+                    <ArrowLeft size={16} /> Управление
                 </Link>
-                <h1 className="text-lg font-semibold">Распределение учебников</h1>
+                <div>
+                    <h1 className="page-title">Распределение учебников</h1>
+                    <p className="page-subtitle">Назначение карточек на юниты, департаменты и роли</p>
+                </div>
             </div>
 
-            <div className="mb-4">
-                <select
+            {/* Filter toolbar */}
+            <div className="surface-toolbar">
+                <Dropdown
                     value={filterUnit}
-                    onChange={(e) => setFilterUnit(e.target.value)}
-                    className="border border-gray-300 px-2 py-1.5 text-sm"
-                >
-                    <option value="">Все юниты</option>
-                    {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-                </select>
+                    onChange={(val) => setFilters((prev) => ({ ...prev, unit: val }))}
+                    options={units.map((u) => ({ value: String(u.id), label: u.name }))}
+                    placeholder="Все юниты"
+                    className="w-56"
+                />
             </div>
 
+            {/* Unit tree */}
             <div className="space-y-2">
                 {displayUnits.map((unit) => {
                     const unitDepts = departments.filter((d) => d.unit === unit.id);
                     const unitAssignments = getAssignmentsFor(unit.id, null, null);
-                    const isExpanded = expandedUnits[unit.id];
+                    const isExpanded = expanded[`u_${unit.id}`];
 
                     return (
-                        <div key={unit.id} className="border border-gray-300">
-                            <div className="flex items-center justify-between p-2 bg-gray-50">
+                        <div key={unit.id} className="surface-panel !p-0">
+                            {/* Unit header */}
+                            <div
+                                className="flex items-center justify-between px-3 py-2 rounded-t-[inherit]"
+                                style={{ background: "var(--n-hover)" }}
+                            >
                                 <button
                                     onClick={() => toggleUnit(unit.id)}
-                                    className="flex items-center gap-1 text-sm font-medium"
+                                    className="flex items-center gap-2 text-sm font-medium"
+                                    style={{ color: "var(--n-fg)" }}
                                 >
-                                    <ChevronRight size={14} className={`transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                                    {isExpanded
+                                        ? <ChevronDown size={14} style={{ color: "var(--n-muted)" }} />
+                                        : <ChevronRight size={14} style={{ color: "var(--n-muted)" }} />
+                                    }
+                                    <Building2 size={14} className="text-amber-400 shrink-0" />
                                     {unit.name}
-                                    <span className="text-xs text-gray-400 font-normal ml-1">
-                                        ({assignments.filter((a) => a.unit === unit.id).length} карточек)
+                                    <span className="badge-muted">
+                                        {assignments.filter((a) => a.unit === unit.id).length}
                                     </span>
                                 </button>
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => openAssignModal(unit.id, null, null)}
-                                        className="text-xs border border-dashed border-gray-400 px-2 py-0.5 text-gray-500 hover:border-gray-600"
+                                        className="btn-ghost"
                                     >
-                                        <Plus size={10} className="inline" /> Назначить
+                                        <Plus size={12} /> Назначить
                                     </button>
                                     <button
                                         onClick={() => handleClear(unit.id, null)}
-                                        className="text-xs text-gray-400 hover:text-gray-700 px-1"
+                                        className="btn-danger btn-sm"
                                         title="Очистить"
                                     >
                                         <Trash2 size={12} />
@@ -197,13 +238,15 @@ export default function TextbookAssignmentsPage() {
                             </div>
 
                             <AnimatedCollapse open={isExpanded}>
-                                <div className="p-2 space-y-1">
+                                <div className="p-3 space-y-2">
                                     {unitAssignments.length > 0 && (
                                         <div className="mb-2">
-                                            <p className="text-[10px] text-gray-400 mb-1">Назначено на юнит:</p>
+                                            <p className="text-[10px] mb-1" style={{ color: "var(--n-muted)" }}>
+                                                Назначено на юнит:
+                                            </p>
                                             <div className="flex flex-wrap gap-1">
                                                 {unitAssignments.map((a) => (
-                                                    <span key={a.id} className="text-xs border border-gray-200 px-2 py-0.5">
+                                                    <span key={a.id} className="badge-muted">
                                                         {a.card_name || `#${a.card}`}
                                                     </span>
                                                 ))}
@@ -214,28 +257,37 @@ export default function TextbookAssignmentsPage() {
                                     {unitDepts.map((dept) => {
                                         const deptRoles = roles.filter((r) => r.department === dept.id);
                                         const deptAssignments = getAssignmentsFor(unit.id, dept.id, null);
-                                        const deptExpanded = expandedDepts[dept.id];
+                                        const deptExpanded = expanded[`d_${dept.id}`];
 
                                         return (
-                                            <div key={dept.id} className="border border-gray-200 ml-4">
-                                                <div className="flex items-center justify-between p-1.5">
+                                            <div key={dept.id} className="surface-panel !p-0 ml-4">
+                                                {/* Dept header */}
+                                                <div className="flex items-center justify-between px-3 py-2">
                                                     <button
                                                         onClick={() => toggleDept(dept.id)}
-                                                        className="flex items-center gap-1 text-xs font-medium"
+                                                        className="flex items-center gap-2 text-xs font-medium"
+                                                        style={{ color: "var(--n-fg)" }}
                                                     >
-                                                        <ChevronRight size={12} className={`transition-transform ${deptExpanded ? "rotate-90" : ""}`} />
+                                                        {deptExpanded
+                                                            ? <ChevronDown size={12} style={{ color: "var(--n-muted)" }} />
+                                                            : <ChevronRight size={12} style={{ color: "var(--n-muted)" }} />
+                                                        }
+                                                        <FolderClosed size={12} className="text-blue-400 shrink-0" />
                                                         {dept.name}
+                                                        {deptAssignments.length > 0 && (
+                                                            <span className="badge-muted">{deptAssignments.length}</span>
+                                                        )}
                                                     </button>
                                                     <div className="flex items-center gap-1">
                                                         <button
                                                             onClick={() => openAssignModal(unit.id, dept.id, null)}
-                                                            className="text-[10px] border border-dashed border-gray-300 px-1.5 py-0.5 text-gray-400 hover:border-gray-500"
+                                                            className="btn-ghost"
                                                         >
-                                                            <Plus size={8} className="inline" />
+                                                            <Plus size={12} />
                                                         </button>
                                                         <button
                                                             onClick={() => handleClear(unit.id, dept.id)}
-                                                            className="text-gray-400 hover:text-gray-700 px-0.5"
+                                                            className="btn-danger btn-sm"
                                                         >
                                                             <Trash2 size={10} />
                                                         </button>
@@ -243,11 +295,11 @@ export default function TextbookAssignmentsPage() {
                                                 </div>
 
                                                 <AnimatedCollapse open={deptExpanded}>
-                                                    <div className="p-1.5 pt-0 space-y-1">
+                                                    <div className="px-3 pb-2 space-y-1">
                                                         {deptAssignments.length > 0 && (
-                                                            <div className="flex flex-wrap gap-1 mb-1">
+                                                            <div className="flex flex-wrap gap-1 mb-2">
                                                                 {deptAssignments.map((a) => (
-                                                                    <span key={a.id} className="text-[10px] border border-gray-200 px-1.5 py-0.5">
+                                                                    <span key={a.id} className="badge-muted">
                                                                         {a.card_name || `#${a.card}`}
                                                                     </span>
                                                                 ))}
@@ -257,13 +309,20 @@ export default function TextbookAssignmentsPage() {
                                                         {deptRoles.map((role) => {
                                                             const roleAssignments = getAssignmentsFor(unit.id, dept.id, role.id);
                                                             return (
-                                                                <div key={role.id} className="flex items-center justify-between ml-4 py-0.5 border-b border-gray-100 last:border-0">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-[10px] text-gray-500">{role.name}</span>
+                                                                <div
+                                                                    key={role.id}
+                                                                    className="flex items-center justify-between ml-4 py-1 border-b last:border-0"
+                                                                    style={{ borderColor: "var(--n-border)" }}
+                                                                >
+                                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                                        <Shield size={11} className="text-purple-400 shrink-0" />
+                                                                        <span className="text-xs" style={{ color: "var(--n-muted)" }}>
+                                                                            {role.name}
+                                                                        </span>
                                                                         {roleAssignments.length > 0 && (
-                                                                            <div className="flex gap-1">
+                                                                            <div className="flex flex-wrap gap-1">
                                                                                 {roleAssignments.map((a) => (
-                                                                                    <span key={a.id} className="text-[10px] border border-gray-200 px-1 py-0">
+                                                                                    <span key={a.id} className="badge-muted">
                                                                                         {a.card_name || `#${a.card}`}
                                                                                     </span>
                                                                                 ))}
@@ -272,7 +331,7 @@ export default function TextbookAssignmentsPage() {
                                                                     </div>
                                                                     <button
                                                                         onClick={() => openAssignModal(unit.id, dept.id, role.id)}
-                                                                        className="text-gray-400 hover:text-gray-600"
+                                                                        className="btn-ghost"
                                                                     >
                                                                         <Plus size={10} />
                                                                     </button>
@@ -286,7 +345,9 @@ export default function TextbookAssignmentsPage() {
                                     })}
 
                                     {unitDepts.length === 0 && (
-                                        <p className="text-[10px] text-gray-400 ml-4">Нет департаментов</p>
+                                        <p className="text-xs ml-4" style={{ color: "var(--n-muted)" }}>
+                                            Нет департаментов
+                                        </p>
                                     )}
                                 </div>
                             </AnimatedCollapse>
@@ -295,77 +356,114 @@ export default function TextbookAssignmentsPage() {
                 })}
 
                 {displayUnits.length === 0 && (
-                    <p className="text-sm text-gray-400 text-center py-8">Нет юнитов</p>
+                    <div className="surface-empty">Нет юнитов</div>
                 )}
             </div>
 
-            <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Назначить карточки" wide>
-                <div className="space-y-3">
-                    <div className="flex gap-2">
-                        <div className="relative flex-1">
-                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <input
-                                placeholder="Поиск..."
-                                value={modalSearch}
-                                onChange={(e) => setModalSearch(e.target.value)}
-                                className="w-full border border-gray-300 pl-7 pr-2 py-1 text-sm"
-                            />
-                        </div>
-                        <select
-                            value={modalSection}
-                            onChange={(e) => { setModalSection(e.target.value); setModalCategory(""); }}
-                            className="border border-gray-300 px-2 py-1 text-sm"
-                        >
-                            <option value="">Раздел</option>
-                            {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
-                        <select
-                            value={modalCategory}
-                            onChange={(e) => setModalCategory(e.target.value)}
-                            className="border border-gray-300 px-2 py-1 text-sm"
-                        >
-                            <option value="">Категория</option>
-                            {modalFilteredCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div>
+            {/* Assign modal */}
+            {modalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/60" onClick={closeModal} />
+                    <div
+                        className="relative max-w-lg w-full rounded-[24px] p-6 flex flex-col"
+                        style={{
+                            background: "linear-gradient(145deg, var(--n-panel), var(--n-card))",
+                            border: "1px solid var(--n-border)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                            maxHeight: "80vh",
+                        }}
+                    >
+                        <h2 className="text-base font-semibold mb-4" style={{ color: "var(--n-fg)" }}>
+                            Назначить карточки
+                        </h2>
 
-                    <div className="max-h-80 overflow-y-auto space-y-1">
-                        {modalCards.map((card) => {
-                            const assigned = modalTarget && isCardAssigned(card.id, modalTarget.unit, modalTarget.department, modalTarget.org_role);
-                            return (
-                                <div key={card.id} className="flex items-center justify-between border border-gray-200 p-2 text-sm">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        {card.first_photo ? (
-                                            <img src={card.first_photo} alt="" className="w-8 h-8 object-cover border border-gray-200 flex-none" />
-                                        ) : (
-                                            <div className="w-8 h-8 bg-gray-50 border border-gray-200 flex-none" />
-                                        )}
-                                        <span className="truncate">{card.name}</span>
-                                    </div>
-                                    {assigned ? (
-                                        <button
-                                            onClick={() => handleUnassign(card.id)}
-                                            className="text-xs border border-gray-800 px-2 py-0.5 flex items-center gap-1"
-                                        >
-                                            <Check size={10} /> Убрать
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleAssign(card.id)}
-                                            className="text-xs border border-dashed border-gray-400 px-2 py-0.5 text-gray-500 hover:border-gray-600"
-                                        >
-                                            Назначить
-                                        </button>
-                                    )}
-                                </div>
-                            );
-                        })}
-                        {modalCards.length === 0 && (
-                            <p className="text-xs text-gray-400 text-center py-4">Нет карточек</p>
-                        )}
+                        <div className="space-y-3 flex flex-col min-h-0 flex-1">
+                            {/* Search */}
+                            <div className="relative">
+                                <Search
+                                    size={13}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2"
+                                    style={{ color: "var(--n-dim)" }}
+                                />
+                                <input
+                                    placeholder="Поиск..."
+                                    value={modalSearch}
+                                    onChange={(e) => setModalSearch(e.target.value)}
+                                    className="input-premium w-full pl-9"
+                                />
+                            </div>
+
+                            {/* Filter dropdowns */}
+                            <div className="flex gap-2">
+                                <Dropdown
+                                    value={modalSection}
+                                    onChange={(val) => { setModalSection(val); setModalCategory(""); }}
+                                    options={sections.map((s) => ({ value: String(s.id), label: s.name }))}
+                                    placeholder="Раздел"
+                                    className="flex-1"
+                                />
+                                <Dropdown
+                                    value={modalCategory}
+                                    onChange={(val) => setModalCategory(val)}
+                                    options={modalFilteredCategories.map((c) => ({ value: String(c.id), label: c.name }))}
+                                    placeholder="Категория"
+                                    className="flex-1"
+                                />
+                            </div>
+
+                            {/* Card list */}
+                            <div className="overflow-y-auto space-y-1 flex-1 pr-1">
+                                {modalCards.map((card) => {
+                                    const assigned = modalTarget && isCardAssigned(
+                                        card.id, modalTarget.unit, modalTarget.department, modalTarget.org_role,
+                                    );
+                                    return (
+                                        <div key={card.id} className="surface-block flex items-center justify-between">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                {card.first_photo ? (
+                                                    <img
+                                                        src={card.first_photo}
+                                                        alt=""
+                                                        className="w-8 h-8 object-cover rounded flex-none"
+                                                        style={{ border: "1px solid var(--n-border)" }}
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className="w-8 h-8 rounded flex-none"
+                                                        style={{ background: "var(--n-hover)", border: "1px solid var(--n-border)" }}
+                                                    />
+                                                )}
+                                                <span className="truncate text-sm" style={{ color: "var(--n-fg)" }}>
+                                                    {card.name}
+                                                </span>
+                                                {assigned && <span className="badge-success shrink-0">Назначено</span>}
+                                            </div>
+                                            {assigned ? (
+                                                <button
+                                                    onClick={() => handleUnassign(card.id)}
+                                                    className="btn-ghost shrink-0"
+                                                >
+                                                    <Check size={12} /> Убрать
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleAssign(card.id)}
+                                                    className="btn-ghost shrink-0"
+                                                >
+                                                    <Plus size={12} /> Назначить
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                                {modalCards.length === 0 && (
+                                    <div className="surface-empty">Нет карточек</div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </Modal>
+            )}
         </div>
     );
 }

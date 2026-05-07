@@ -4,7 +4,7 @@ import { getCard, getMyAvailableCards } from "../api/textbooks";
 import useRealtimeUpdates from "../hooks/useRealtimeUpdates";
 import AnimatedCollapse from "../components/AnimatedCollapse";
 import Lightbox from "../components/Lightbox";
-import { ArrowLeft, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Pencil, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 
 export default function TextbookCardPage() {
     const { id } = useParams();
@@ -12,7 +12,7 @@ export default function TextbookCardPage() {
     const [card, setCard] = useState(null);
     const [siblings, setSiblings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [detailOpen, setDetailOpen] = useState(false);
+    const [expandedDetails, setExpandedDetails] = useState({});
     const [lightboxSrc, setLightboxSrc] = useState(null);
     const [activePhoto, setActivePhoto] = useState(0);
 
@@ -33,10 +33,20 @@ export default function TextbookCardPage() {
 
     useEffect(() => {
         setLoading(true);
-        setDetailOpen(false);
+        setExpandedDetails({});
         setActivePhoto(0);
         loadCard();
     }, [id]);
+
+    useEffect(() => {
+        if (card?.paragraphs) {
+            const details = {};
+            card.paragraphs
+                .filter((p) => p.paragraph_type === "detail")
+                .forEach((p) => { details[p.id] = true; });
+            setExpandedDetails(details);
+        }
+    }, [card]);
 
     useRealtimeUpdates(["textbook_card"], loadCard);
 
@@ -46,57 +56,93 @@ export default function TextbookCardPage() {
 
     const returnPath = sessionStorage.getItem("tb_returnPath") || "/textbooks";
 
-    if (loading) return <p className="text-center py-8 text-gray-500">Загрузка...</p>;
-    if (!card) return <p className="text-center py-8 text-gray-500">Карточка не найдена</p>;
+    if (loading) {
+        return (
+            <div className="page-shell page-stack">
+                <div className="surface-empty">Загрузка...</div>
+            </div>
+        );
+    }
+
+    if (!card) {
+        return (
+            <div className="page-shell page-stack">
+                <div className="surface-empty">Карточка не найдена</div>
+            </div>
+        );
+    }
 
     const frontParagraphs = card.paragraphs?.filter((p) => p.paragraph_type === "front") || [];
     const detailParagraphs = card.paragraphs?.filter((p) => p.paragraph_type === "detail") || [];
     const photos = card.photos || [];
 
+    const breadcrumb = [card.section_name, card.category_name].filter(Boolean).join(" → ");
+
     return (
-        <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-                <Link to={returnPath} className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900">
-                    <ArrowLeft size={14} /> Назад
+        <div className="page-shell page-stack">
+            {/* Top bar: back + nav + edit */}
+            <div className="flex items-center justify-between">
+                <Link to={returnPath} className="btn-ghost">
+                    <ArrowLeft size={14} /> Назад к учебникам
                 </Link>
                 <div className="flex items-center gap-2">
-                    {prevCard && (
-                        <button onClick={() => navigate(`/textbooks/card/${prevCard.id}`)} className="p-1 border border-gray-300 hover:bg-gray-50" title="Предыдущая">
-                            <ChevronLeft size={14} />
-                        </button>
-                    )}
-                    {nextCard && (
-                        <button onClick={() => navigate(`/textbooks/card/${nextCard.id}`)} className="p-1 border border-gray-300 hover:bg-gray-50" title="Следующая">
-                            <ChevronRight size={14} />
-                        </button>
-                    )}
+                    <button
+                        className="btn-surface"
+                        disabled={!prevCard}
+                        onClick={() => prevCard && navigate(`/textbooks/card/${prevCard.id}`)}
+                        title="Предыдущая"
+                    >
+                        <ChevronLeft size={14} />
+                    </button>
+                    <button
+                        className="btn-surface"
+                        disabled={!nextCard}
+                        onClick={() => nextCard && navigate(`/textbooks/card/${nextCard.id}`)}
+                        title="Следующая"
+                    >
+                        <ChevronRight size={14} />
+                    </button>
                     {card.can_edit && (
-                        <Link to={`/textbooks/manage/card/${id}/edit`} className="flex items-center gap-1 text-sm border border-gray-300 px-2 py-1 hover:bg-gray-50">
-                            <Pencil size={12} /> Редактировать
+                        <Link to={`/textbooks/manage/card/${id}/edit`} className="btn-surface">
+                            <Pencil size={14} /> Редактировать
                         </Link>
                     )}
                 </div>
             </div>
 
+            {/* Title + breadcrumb */}
+            <div>
+                <h1 className="page-title">{card.name}</h1>
+                {breadcrumb && <p className="page-subtitle">{breadcrumb}</p>}
+            </div>
+
+            {/* Photo gallery */}
             {photos.length > 0 && (
-                <div className="mb-4">
+                <div className="surface-panel">
                     <img
                         src={photos[activePhoto]?.file}
                         alt=""
-                        className="w-full h-64 object-cover border border-gray-200 cursor-pointer"
+                        className="rounded-lg max-h-72 sm:max-h-96 w-full object-contain cursor-pointer"
+                        style={{ background: "var(--n-hover)" }}
                         onClick={() => setLightboxSrc(photos[activePhoto]?.file)}
                     />
                     {photos.length > 1 && (
-                        <div className="flex gap-1 mt-1 overflow-x-auto">
+                        <div className="flex gap-2 mt-3 overflow-x-auto">
                             {photos.map((p, i) => (
                                 <button
                                     key={p.id}
                                     onClick={() => setActivePhoto(i)}
-                                    className={`w-12 h-12 flex-none border ${
-                                        i === activePhoto ? "border-gray-800" : "border-gray-200"
-                                    }`}
+                                    className="flex-none focus:outline-none"
+                                    style={{
+                                        borderRadius: "0.5rem",
+                                        border: `2px solid ${i === activePhoto ? "var(--n-accent)" : "transparent"}`,
+                                    }}
                                 >
-                                    <img src={p.file} alt="" className="w-full h-full object-cover" />
+                                    <img
+                                        src={p.file}
+                                        alt=""
+                                        className="w-24 h-24 rounded-lg object-cover cursor-pointer"
+                                    />
                                 </button>
                             ))}
                         </div>
@@ -104,59 +150,103 @@ export default function TextbookCardPage() {
                 </div>
             )}
 
-            <h1 className="text-xl font-semibold mb-4">{card.name}</h1>
-
-            {frontParagraphs.map((p) => (
-                <div key={p.id} className="mb-4">
-                    {p.label && <h3 className="text-sm font-medium mb-1">{p.label}</h3>}
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{p.text}</p>
-                    {p.photo && (
-                        <img
-                            src={p.photo}
-                            alt=""
-                            className="mt-2 max-h-48 object-cover border border-gray-200 cursor-pointer"
-                            onClick={() => setLightboxSrc(p.photo)}
-                        />
-                    )}
-                </div>
-            ))}
-
-            {detailParagraphs.length > 0 && (
-                <div className="mt-4 border-t border-gray-200 pt-3">
-                    <button
-                        onClick={() => setDetailOpen(!detailOpen)}
-                        className="text-sm font-medium flex items-center gap-1"
-                    >
-                        {detailOpen ? <ChevronLeft size={12} className="rotate-[-90deg]" /> : <ChevronRight size={12} />}
-                        Подробнее
-                    </button>
-                    <AnimatedCollapse open={detailOpen}>
-                        <div className="mt-3 space-y-4">
-                            {detailParagraphs.map((p) => (
-                                <div key={p.id}>
-                                    {p.label && <h3 className="text-sm font-medium mb-1">{p.label}</h3>}
-                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{p.text}</p>
-                                    {p.photo && (
-                                        <img
-                                            src={p.photo}
-                                            alt=""
-                                            className="mt-2 max-h-48 object-cover border border-gray-200 cursor-pointer"
-                                            onClick={() => setLightboxSrc(p.photo)}
-                                        />
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </AnimatedCollapse>
+            {/* Front paragraphs */}
+            {frontParagraphs.length > 0 && (
+                <div className="surface-panel">
+                    <p className="section-title">Основная информация</p>
+                    <div className="divide-y" style={{ borderColor: "var(--n-border)" }}>
+                        {frontParagraphs.map((p) => (
+                            <div key={p.id} className="py-3 first:pt-0 last:pb-0">
+                                {p.label && (
+                                    <p className="text-xs font-semibold mb-1" style={{ color: "var(--n-accent)" }}>
+                                        {p.label}
+                                    </p>
+                                )}
+                                <p className="text-sm whitespace-pre-wrap text-secondary">{p.text}</p>
+                                {p.photo && (
+                                    <img
+                                        src={p.photo}
+                                        alt=""
+                                        className="mt-2 max-h-48 rounded-lg object-cover cursor-pointer"
+                                        onClick={() => setLightboxSrc(p.photo)}
+                                    />
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
-            {card.tags?.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-6">
-                    {card.tags.map((t) => (
-                        <span key={t.id} className="text-xs border border-gray-300 px-2 py-0.5">{t.tag}</span>
-                    ))}
+            {/* Detail paragraphs */}
+            {detailParagraphs.length > 0 && (
+                <div className="surface-panel">
+                    <p className="section-title">Подробности</p>
+                    <div className="space-y-2">
+                        {detailParagraphs.map((p) => {
+                            const isOpen = !!expandedDetails[p.id];
+                            return (
+                                <div key={p.id} className="border-t pt-2 first:border-t-0 first:pt-0" style={{ borderColor: "var(--n-border)" }}>
+                                    <button
+                                        className="w-full flex items-center justify-between gap-2 text-left"
+                                        onClick={() =>
+                                            setExpandedDetails((prev) => ({
+                                                ...prev,
+                                                [p.id]: !prev[p.id],
+                                            }))
+                                        }
+                                    >
+                                        <span
+                                            className="text-xs font-semibold"
+                                            style={{ color: "var(--n-accent)" }}
+                                        >
+                                            {p.label || "Подробнее"}
+                                        </span>
+                                        <ChevronDown
+                                            size={14}
+                                            style={{
+                                                color: "var(--n-muted)",
+                                                transition: "transform 200ms",
+                                                transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                                                flexShrink: 0,
+                                            }}
+                                        />
+                                    </button>
+                                    <AnimatedCollapse open={isOpen}>
+                                        <div className="mt-2">
+                                            <p className="text-sm whitespace-pre-wrap text-secondary">{p.text}</p>
+                                            {p.photo && (
+                                                <img
+                                                    src={p.photo}
+                                                    alt=""
+                                                    className="mt-2 max-h-48 rounded-lg object-cover cursor-pointer"
+                                                    onClick={() => setLightboxSrc(p.photo)}
+                                                />
+                                            )}
+                                        </div>
+                                    </AnimatedCollapse>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
+            )}
+
+            {/* Tags */}
+            {card.tags?.length > 0 && (
+                <div className="surface-panel">
+                    <div className="flex flex-wrap gap-2">
+                        {card.tags.map((t) => (
+                            <span key={t.id} className="badge-muted">{t.tag}</span>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Assignments */}
+            {card.assignments?.length > 0 && (
+                <p className="text-muted text-sm">
+                    Доступно в: {card.assignments.map((a) => a.name || a).join(", ")}
+                </p>
             )}
 
             {lightboxSrc && <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />}

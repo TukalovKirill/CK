@@ -2,16 +2,21 @@ import { useEffect, useState, useMemo } from "react";
 import axiosInstance from "../api/axiosInstance";
 import { getUnits, getDepartments, getAssignableRoles } from "../api/org";
 import { deleteAssignment, bulkCreateAssignments } from "../api/assignments";
-import { useAuth, hasPermission } from "../context/AuthContext";
+import { useAuth, hasPermission, getUserUnitsForPermission } from "../context/AuthContext";
 import useRealtimeUpdates from "../hooks/useRealtimeUpdates";
 import useSessionState from "../hooks/useSessionState";
-import Modal from "../components/Modal";
+import Dropdown from "../components/Dropdown";
+import { useDialog } from "../components/DialogProvider";
 import toast from "react-hot-toast";
 import { Plus, Trash2, Pencil, Copy, RotateCw, Search } from "lucide-react";
 
 export default function TeamPage() {
     const { user } = useAuth();
     const canManage = hasPermission(user, "team.manage");
+    const dialog = useDialog();
+
+    const allowedViewUnitIds = getUserUnitsForPermission(user, "team.view");
+    const allowedManageUnitIds = getUserUnitsForPermission(user, "team.manage");
 
     const [employees, setEmployees] = useState([]);
     const [invites, setInvites] = useState([]);
@@ -25,13 +30,13 @@ export default function TeamPage() {
     const [selectedRole, setSelectedRole] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
 
-    const [showModal, setShowModal] = useSessionState("team_showModal", false);
-    const [editing, setEditing] = useSessionState("team_editing", null);
-    const [form, setForm] = useSessionState("team_form", {
+    const [showModal, setShowModal] = useSessionState("team:modal", false);
+    const [editing, setEditing] = useSessionState("team:editing", null);
+    const [form, setForm] = useSessionState("team:form", {
         full_name: "", first_name: "", last_name: "", email: "", grade: 0, birth_date: "",
     });
-    const [inviteAssignments, setInviteAssignments] = useSessionState("team_inviteAssignments", []);
-    const [pendingAssign, setPendingAssign] = useSessionState("team_pendingAssign", {
+    const [inviteAssignments, setInviteAssignments] = useSessionState("team:invAssign", []);
+    const [pendingAssign, setPendingAssign] = useSessionState("team:pending", {
         unit: "", department: "", org_role: "",
     });
 
@@ -159,7 +164,8 @@ export default function TeamPage() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Удалить сотрудника?")) return;
+        const ok = await dialog.confirm("Удалить сотрудника?", "Это действие нельзя отменить.", { destructive: true });
+        if (!ok) return;
         try {
             await axiosInstance.delete(`employees/${id}/`);
             loadAll();
@@ -169,6 +175,8 @@ export default function TeamPage() {
     };
 
     const handleRevoke = async (id) => {
+        const ok = await dialog.confirm("Отозвать приглашение?", "Приглашение станет недействительным.", { destructive: true });
+        if (!ok) return;
         try {
             await axiosInstance.post(`invites/${id}/revoke/`);
             loadAll();
@@ -187,7 +195,7 @@ export default function TeamPage() {
     };
 
     const copyInviteLink = (token) => {
-        const url = `${window.location.origin}/invite/${token}`;
+        const url = `${window.location.origin}/accept-invite?token=${token}`;
         navigator.clipboard.writeText(url).then(() => toast.success("Ссылка скопирована"));
     };
 
@@ -235,14 +243,24 @@ export default function TeamPage() {
         return map[status] || status;
     };
 
-    if (loading) return <p className="text-center py-8 text-gray-500">Загрузка...</p>;
+    const statusBadgeClass = (status) => {
+        if (status === "accepted") return "badge-success";
+        if (status === "revoked" || status === "expired") return "badge-danger";
+        return "badge-muted";
+    };
+
+    if (loading) return (
+        <div className="page-shell page-stack">
+            <div className="surface-empty">Загрузка...</div>
+        </div>
+    );
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-lg font-semibold">Команда</h1>
+        <div className="page-shell page-stack">
+            <div className="page-header">
+                <h1 className="page-title">Команда</h1>
                 {canManage && (
-                    <button onClick={openCreate} className="flex items-center gap-1.5 border border-gray-400 px-3 py-1 text-sm hover:bg-gray-50">
+                    <button onClick={openCreate} className="btn-save flex items-center gap-1.5">
                         <Plus size={14} /> Пригласить
                     </button>
                 )}
@@ -250,38 +268,47 @@ export default function TeamPage() {
 
             <div className="flex flex-wrap gap-2 mb-4">
                 <div className="relative flex-1 min-w-48">
-                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--n-dim)" }} />
                     <input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Поиск..."
-                        className="border border-gray-300 pl-7 pr-2 py-1 text-sm w-full"
+                        className="input-premium w-full pl-8"
                     />
                 </div>
-                <select value={selectedUnit} onChange={(e) => { setSelectedUnit(e.target.value); setSelectedDept(""); setSelectedRole(""); }} className="border border-gray-300 px-2 py-1 text-sm">
-                    <option value="">Все юниты</option>
-                    {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-                </select>
-                <select value={selectedDept} onChange={(e) => { setSelectedDept(e.target.value); setSelectedRole(""); }} className="border border-gray-300 px-2 py-1 text-sm">
-                    <option value="">Все департаменты</option>
-                    {filteredDepts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-                <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} className="border border-gray-300 px-2 py-1 text-sm">
-                    <option value="">Все роли</option>
-                    {roles.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
-                </select>
+                <Dropdown
+                    value={selectedUnit}
+                    onChange={(v) => { setSelectedUnit(v); setSelectedDept(""); setSelectedRole(""); }}
+                    placeholder="Все юниты"
+                    options={units.map((u) => ({ value: String(u.id), label: u.name }))}
+                />
+                <Dropdown
+                    value={selectedDept}
+                    onChange={(v) => { setSelectedDept(v); setSelectedRole(""); }}
+                    placeholder="Все департаменты"
+                    options={filteredDepts.map((d) => ({ value: String(d.id), label: d.name }))}
+                />
+                <Dropdown
+                    value={selectedRole}
+                    onChange={(v) => setSelectedRole(v)}
+                    placeholder="Все роли"
+                    options={roles.map((r) => ({ value: String(r.id), label: r.title }))}
+                />
             </div>
 
             <div className="space-y-1">
                 {filteredEmployees.map((emp) => (
-                    <div key={emp.id} className="border border-gray-300 p-3 flex items-center justify-between">
+                    <div key={emp.id} className="surface-panel flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 border border-gray-300 flex items-center justify-center text-xs text-gray-500">
+                            <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium shrink-0"
+                                style={{ background: "var(--n-hover)", color: "var(--n-fg)", border: "1px solid var(--n-border)" }}
+                            >
                                 {(emp.full_name || emp.email || "?")[0].toUpperCase()}
                             </div>
                             <div>
-                                <p className="text-sm font-medium">{emp.full_name}</p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-sm font-medium" style={{ color: "var(--n-fg)" }}>{emp.full_name}</p>
+                                <p className="text-xs text-muted">
                                     {emp.email}
                                     {emp.role_title && ` — ${emp.role_title}`}
                                     {emp.grade != null && ` · грейд ${emp.grade}`}
@@ -290,47 +317,51 @@ export default function TeamPage() {
                         </div>
                         {canManage && (
                             <div className="flex items-center gap-1">
-                                <button onClick={() => openEdit(emp)} className="p-1 hover:bg-gray-100">
-                                    <Pencil size={14} className="text-gray-500" />
+                                <button onClick={() => openEdit(emp)} className="btn-ghost p-1">
+                                    <Pencil size={14} />
                                 </button>
-                                <button onClick={() => handleDelete(emp.id)} className="p-1 hover:bg-gray-100">
-                                    <Trash2 size={14} className="text-gray-500" />
+                                <button onClick={() => handleDelete(emp.id)} className="btn-danger p-1">
+                                    <Trash2 size={14} />
                                 </button>
                             </div>
                         )}
                     </div>
                 ))}
                 {filteredEmployees.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-4">Нет сотрудников</p>
+                    <div className="surface-empty">Нет сотрудников</div>
                 )}
             </div>
 
             {canManage && filteredInvites.length > 0 && (
                 <div className="mt-6">
-                    <h2 className="text-sm font-medium mb-2">Приглашения</h2>
+                    <h2 className="text-sm font-medium mb-2" style={{ color: "var(--n-muted)" }}>Приглашения</h2>
                     <div className="space-y-1">
                         {filteredInvites.map((inv) => (
-                            <div key={inv.id} className="border border-dashed border-gray-300 p-3 flex items-center justify-between">
+                            <div
+                                key={inv.id}
+                                className="surface-panel flex items-center justify-between"
+                                style={{ borderStyle: "dashed" }}
+                            >
                                 <div>
-                                    <p className="text-sm">{inv.email}</p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-sm" style={{ color: "var(--n-fg)" }}>{inv.email}</p>
+                                    <p className="text-xs text-muted flex items-center gap-1 flex-wrap mt-0.5">
                                         {inv.first_name} {inv.last_name}
                                         {" · "}
-                                        <span className="border border-gray-300 px-1">{statusLabel(inv.status)}</span>
+                                        <span className={statusBadgeClass(inv.status)}>{statusLabel(inv.status)}</span>
                                         {inv.expires_at && (
                                             <> · до {new Date(inv.expires_at).toLocaleDateString()}</>
                                         )}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <button onClick={() => handleResend(inv.id)} className="p-1 hover:bg-gray-100" title="Отправить повторно">
-                                        <RotateCw size={14} className="text-gray-500" />
+                                    <button onClick={() => handleResend(inv.id)} className="btn-ghost p-1" title="Отправить повторно">
+                                        <RotateCw size={14} />
                                     </button>
-                                    <button onClick={() => copyInviteLink(inv.token)} className="p-1 hover:bg-gray-100" title="Копировать ссылку">
-                                        <Copy size={14} className="text-gray-500" />
+                                    <button onClick={() => copyInviteLink(inv.token)} className="btn-ghost p-1" title="Копировать ссылку">
+                                        <Copy size={14} />
                                     </button>
-                                    <button onClick={() => handleRevoke(inv.id)} className="p-1 hover:bg-gray-100" title="Отозвать">
-                                        <Trash2 size={14} className="text-gray-500" />
+                                    <button onClick={() => handleRevoke(inv.id)} className="btn-danger p-1" title="Отозвать">
+                                        <Trash2 size={14} />
                                     </button>
                                 </div>
                             </div>
@@ -339,133 +370,173 @@ export default function TeamPage() {
                 </div>
             )}
 
-            <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? "Редактировать сотрудника" : "Пригласить сотрудника"}>
-                <form onSubmit={handleSubmit} className="space-y-3">
-                    {editing ? (
-                        <>
-                            <label className="block">
-                                <span className="text-xs text-gray-600">ФИО</span>
-                                <input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                                    className="border border-gray-300 px-2 py-1 text-sm w-full" />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-600">Email</span>
-                                <input value={form.email} readOnly className="border border-gray-200 bg-gray-50 px-2 py-1 text-sm w-full" />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-600">Грейд (0–5)</span>
-                                <input type="number" min={0} max={5} value={form.grade}
-                                    onChange={(e) => setForm({ ...form, grade: Number(e.target.value) })}
-                                    className="border border-gray-300 px-2 py-1 text-sm w-full" />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-600">Дата рождения</span>
-                                <input type="date" value={form.birth_date || ""}
-                                    onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
-                                    className="border border-gray-300 px-2 py-1 text-sm w-full" />
-                            </label>
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/60" onClick={() => setShowModal(false)} />
+                    <div
+                        className="relative max-w-xl w-full rounded-[24px] p-6 space-y-4"
+                        style={{
+                            background: "linear-gradient(145deg, var(--n-panel), var(--n-card))",
+                            border: "1px solid var(--n-border)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                        }}
+                    >
+                        <h3 className="text-lg font-semibold" style={{ color: "var(--n-fg)" }}>
+                            {editing ? "Редактировать сотрудника" : "Пригласить сотрудника"}
+                        </h3>
+                        <form onSubmit={handleSubmit} className="space-y-3">
+                            {editing ? (
+                                <>
+                                    <label className="block">
+                                        <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>ФИО</span>
+                                        <input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                                            className="input-premium w-full mt-1" />
+                                    </label>
+                                    <label className="block">
+                                        <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Email</span>
+                                        <input value={form.email} readOnly className="input-premium w-full mt-1 opacity-50" />
+                                    </label>
+                                    <label className="block">
+                                        <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Грейд (0–5)</span>
+                                        <input type="number" min={0} max={5} value={form.grade}
+                                            onChange={(e) => setForm({ ...form, grade: Number(e.target.value) })}
+                                            className="input-premium w-full mt-1" />
+                                    </label>
+                                    <label className="block">
+                                        <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Дата рождения</span>
+                                        <input type="date" value={form.birth_date || ""}
+                                            onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
+                                            className="input-premium w-full mt-1" />
+                                    </label>
 
-                            {editingEmployee?.assignments?.length > 0 && (
-                                <div>
-                                    <span className="text-xs text-gray-600">Текущие назначения</span>
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                        {editingEmployee.assignments.map((a) => (
-                                            <span key={a.id} className="inline-flex items-center gap-1 text-xs border border-gray-300 px-2 py-0.5">
-                                                {a.unit_name} / {a.org_role_title}
-                                                <button type="button" onClick={() => removeEditingAssignment(a.id)}>
-                                                    <span className="text-gray-500">&times;</span>
-                                                </button>
-                                            </span>
-                                        ))}
+                                    {editingEmployee?.assignments?.length > 0 && (
+                                        <div>
+                                            <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Текущие назначения</span>
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                {editingEmployee.assignments.map((a) => (
+                                                    <span key={a.id} className="badge-bronze inline-flex items-center gap-1">
+                                                        {a.unit_name} / {a.org_role_title}
+                                                        <button type="button" onClick={() => removeEditingAssignment(a.id)}
+                                                            className="opacity-60 hover:opacity-100 ml-0.5">
+                                                            &times;
+                                                        </button>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="pt-2" style={{ borderTop: "1px solid var(--n-border)" }}>
+                                        <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Добавить назначение</span>
+                                        <div className="flex gap-1 mt-1">
+                                            <Dropdown
+                                                className="flex-1"
+                                                value={pendingAssign.unit}
+                                                onChange={(v) => setPendingAssign({ ...pendingAssign, unit: v, department: "" })}
+                                                placeholder="Юнит"
+                                                options={units.map((u) => ({ value: String(u.id), label: u.name }))}
+                                            />
+                                            <Dropdown
+                                                className="flex-1"
+                                                value={pendingAssign.department}
+                                                onChange={(v) => setPendingAssign({ ...pendingAssign, department: v })}
+                                                placeholder="Деп."
+                                                options={modalDepts.map((d) => ({ value: String(d.id), label: d.name }))}
+                                            />
+                                            <Dropdown
+                                                className="flex-1"
+                                                value={pendingAssign.org_role}
+                                                onChange={(v) => setPendingAssign({ ...pendingAssign, org_role: v })}
+                                                placeholder="Роль"
+                                                options={roles.map((r) => ({ value: String(r.id), label: r.title }))}
+                                            />
+                                            <button type="button" onClick={addEditingAssignment} className="btn-save px-3">+</button>
+                                        </div>
                                     </div>
-                                </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex gap-2">
+                                        <label className="flex-1">
+                                            <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Имя</span>
+                                            <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                                                className="input-premium w-full mt-1" />
+                                        </label>
+                                        <label className="flex-1">
+                                            <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Фамилия</span>
+                                            <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                                                className="input-premium w-full mt-1" />
+                                        </label>
+                                    </div>
+                                    <label className="block">
+                                        <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Email</span>
+                                        <input type="email" required value={form.email}
+                                            onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                            className="input-premium w-full mt-1" />
+                                    </label>
+                                    <label className="block">
+                                        <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Грейд (0–5)</span>
+                                        <input type="number" min={0} max={5} value={form.grade}
+                                            onChange={(e) => setForm({ ...form, grade: Number(e.target.value) })}
+                                            className="input-premium w-full mt-1" />
+                                    </label>
+
+                                    <div className="pt-2" style={{ borderTop: "1px solid var(--n-border)" }}>
+                                        <span className="text-xs font-medium" style={{ color: "var(--n-muted)" }}>Назначения</span>
+                                        <div className="flex gap-1 mt-1">
+                                            <Dropdown
+                                                className="flex-1"
+                                                value={pendingAssign.unit}
+                                                onChange={(v) => setPendingAssign({ ...pendingAssign, unit: v, department: "" })}
+                                                placeholder="Юнит"
+                                                options={units.map((u) => ({ value: String(u.id), label: u.name }))}
+                                            />
+                                            <Dropdown
+                                                className="flex-1"
+                                                value={pendingAssign.department}
+                                                onChange={(v) => setPendingAssign({ ...pendingAssign, department: v })}
+                                                placeholder="Деп."
+                                                options={modalDepts.map((d) => ({ value: String(d.id), label: d.name }))}
+                                            />
+                                            <Dropdown
+                                                className="flex-1"
+                                                value={pendingAssign.org_role}
+                                                onChange={(v) => setPendingAssign({ ...pendingAssign, org_role: v })}
+                                                placeholder="Роль"
+                                                options={roles.map((r) => ({ value: String(r.id), label: r.title }))}
+                                            />
+                                            <button type="button" onClick={addAssignment} className="btn-save px-3">+</button>
+                                        </div>
+                                        {inviteAssignments.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                                {inviteAssignments.map((a, i) => (
+                                                    <span key={i} className="badge-bronze inline-flex items-center gap-1">
+                                                        {units.find((u) => String(u.id) === String(a.unit))?.name} /
+                                                        {roles.find((r) => String(r.id) === String(a.org_role))?.title}
+                                                        <button type="button" onClick={() => setInviteAssignments(inviteAssignments.filter((_, j) => j !== i))}
+                                                            className="opacity-60 hover:opacity-100 ml-0.5">
+                                                            &times;
+                                                        </button>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
                             )}
 
-                            <div className="border-t border-gray-200 pt-2">
-                                <span className="text-xs text-gray-600">Добавить назначение</span>
-                                <div className="flex gap-1 mt-1">
-                                    <select value={pendingAssign.unit} onChange={(e) => setPendingAssign({ ...pendingAssign, unit: e.target.value, department: "" })} className="border border-gray-300 px-1 py-1 text-xs flex-1">
-                                        <option value="">Юнит</option>
-                                        {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-                                    </select>
-                                    <select value={pendingAssign.department} onChange={(e) => setPendingAssign({ ...pendingAssign, department: e.target.value })} className="border border-gray-300 px-1 py-1 text-xs flex-1">
-                                        <option value="">Деп.</option>
-                                        {modalDepts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                                    </select>
-                                    <select value={pendingAssign.org_role} onChange={(e) => setPendingAssign({ ...pendingAssign, org_role: e.target.value })} className="border border-gray-300 px-1 py-1 text-xs flex-1">
-                                        <option value="">Роль</option>
-                                        {roles.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
-                                    </select>
-                                    <button type="button" onClick={addEditingAssignment} className="border border-gray-400 px-2 py-1 text-xs">+</button>
-                                </div>
+                            <div className="flex gap-2 pt-1">
+                                <button type="button" onClick={() => setShowModal(false)} className="btn-surface flex-1">
+                                    Отмена
+                                </button>
+                                <button type="submit" className="btn-save flex-1">
+                                    {editing ? "Сохранить" : "Отправить приглашение"}
+                                </button>
                             </div>
-                        </>
-                    ) : (
-                        <>
-                            <div className="flex gap-2">
-                                <label className="flex-1">
-                                    <span className="text-xs text-gray-600">Имя</span>
-                                    <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-                                        className="border border-gray-300 px-2 py-1 text-sm w-full" />
-                                </label>
-                                <label className="flex-1">
-                                    <span className="text-xs text-gray-600">Фамилия</span>
-                                    <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-                                        className="border border-gray-300 px-2 py-1 text-sm w-full" />
-                                </label>
-                            </div>
-                            <label className="block">
-                                <span className="text-xs text-gray-600">Email</span>
-                                <input type="email" required value={form.email}
-                                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                    className="border border-gray-300 px-2 py-1 text-sm w-full" />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-600">Грейд (0–5)</span>
-                                <input type="number" min={0} max={5} value={form.grade}
-                                    onChange={(e) => setForm({ ...form, grade: Number(e.target.value) })}
-                                    className="border border-gray-300 px-2 py-1 text-sm w-full" />
-                            </label>
-
-                            <div className="border-t border-gray-200 pt-2">
-                                <span className="text-xs text-gray-600">Назначения</span>
-                                <div className="flex gap-1 mt-1">
-                                    <select value={pendingAssign.unit} onChange={(e) => setPendingAssign({ ...pendingAssign, unit: e.target.value, department: "" })} className="border border-gray-300 px-1 py-1 text-xs flex-1">
-                                        <option value="">Юнит</option>
-                                        {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-                                    </select>
-                                    <select value={pendingAssign.department} onChange={(e) => setPendingAssign({ ...pendingAssign, department: e.target.value })} className="border border-gray-300 px-1 py-1 text-xs flex-1">
-                                        <option value="">Деп.</option>
-                                        {modalDepts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                                    </select>
-                                    <select value={pendingAssign.org_role} onChange={(e) => setPendingAssign({ ...pendingAssign, org_role: e.target.value })} className="border border-gray-300 px-1 py-1 text-xs flex-1">
-                                        <option value="">Роль</option>
-                                        {roles.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
-                                    </select>
-                                    <button type="button" onClick={addAssignment} className="border border-gray-400 px-2 py-1 text-xs">+</button>
-                                </div>
-                                {inviteAssignments.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                        {inviteAssignments.map((a, i) => (
-                                            <span key={i} className="inline-flex items-center gap-1 text-xs border border-gray-300 px-2 py-0.5">
-                                                {units.find((u) => String(u.id) === String(a.unit))?.name} /
-                                                {roles.find((r) => String(r.id) === String(a.org_role))?.title}
-                                                <button type="button" onClick={() => setInviteAssignments(inviteAssignments.filter((_, j) => j !== i))}>
-                                                    <span className="text-gray-500">&times;</span>
-                                                </button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    )}
-
-                    <button type="submit" className="w-full border border-gray-400 py-1.5 text-sm font-medium hover:bg-gray-50">
-                        {editing ? "Сохранить" : "Отправить приглашение"}
-                    </button>
-                </form>
-            </Modal>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

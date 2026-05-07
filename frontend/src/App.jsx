@@ -8,31 +8,45 @@ import RegisterPage from "./pages/RegisterPage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
 import ProfilePage from "./pages/ProfilePage";
 import TeamPage from "./pages/TeamPage";
-import OrgStructurePage from "./pages/OrgStructurePage";
+import CompanySettingsPage from "./pages/CompanySettingsPage";
+import ZonesPage from "./pages/ZonesPage";
 import TextbooksPage from "./pages/TextbooksPage";
 import TextbookCardPage from "./pages/TextbookCardPage";
 import TextbookManagePage from "./pages/TextbookManagePage";
 import TextbookCardEditPage from "./pages/TextbookCardEditPage";
 import TextbookAssignmentsPage from "./pages/TextbookAssignmentsPage";
+import QuizListPage from "./pages/QuizListPage";
+import QuizDetailPage from "./pages/QuizDetailPage";
+import QuizTakePage from "./pages/QuizTakePage";
+import QuizResultPage from "./pages/QuizResultPage";
+import QuizResultsPage from "./pages/QuizResultsPage";
+import QuizSettingsPage from "./pages/QuizSettingsPage";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
       <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
-      <Route path="/invite/:token" element={<AcceptInvitePage />} />
+      <Route path="/accept-invite" element={<AcceptInvitePage />} />
 
       <Route element={<RequireAuth />}>
         <Route element={<Layout />}>
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/team" element={<TeamPage />} />
-          <Route path="/org" element={<OrgStructurePage />} />
+          <Route path="/team" element={<RequirePermission code="team.view"><TeamPage /></RequirePermission>} />
+          <Route path="/company-settings" element={<RequirePermission code="org.view"><CompanySettingsPage /></RequirePermission>} />
+          <Route path="/zones" element={<RequirePermission code="org.view"><ZonesPage /></RequirePermission>} />
           <Route path="/textbooks" element={<RequirePermission code="textbooks.view"><TextbooksPage /></RequirePermission>} />
           <Route path="/textbooks/card/:id" element={<RequirePermission code="textbooks.view"><TextbookCardPage /></RequirePermission>} />
           <Route path="/textbooks/manage" element={<RequirePermission code="textbooks.edit"><TextbookManagePage /></RequirePermission>} />
           <Route path="/textbooks/manage/card/new" element={<RequirePermission code="textbooks.edit"><TextbookCardEditPage /></RequirePermission>} />
           <Route path="/textbooks/manage/card/:id/edit" element={<RequirePermission code="textbooks.edit"><TextbookCardEditPage /></RequirePermission>} />
           <Route path="/textbooks/assignments" element={<RequirePermission code="textbooks.manage_assignments"><TextbookAssignmentsPage /></RequirePermission>} />
+          <Route path="/quizzes" element={<RequirePermission code="quizzes.take"><QuizListPage /></RequirePermission>} />
+          <Route path="/quizzes/:assignmentId" element={<RequirePermission code="quizzes.take"><QuizDetailPage /></RequirePermission>} />
+          <Route path="/quizzes/take/:attemptId" element={<RequirePermission code="quizzes.take"><QuizTakePage /></RequirePermission>} />
+          <Route path="/quizzes/result/:attemptId" element={<RequirePermission code="quizzes.take"><QuizResultPage /></RequirePermission>} />
+          <Route path="/quizzes/results" element={<RequirePermission code="quizzes.view_stats"><QuizResultsPage /></RequirePermission>} />
+          <Route path="/quizzes/settings" element={<RequirePermission code="quizzes.manage_templates"><QuizSettingsPage /></RequirePermission>} />
         </Route>
       </Route>
 

@@ -7,9 +7,11 @@ import {
 } from "../api/textbooks";
 import { useAuth, hasPermission } from "../context/AuthContext";
 import useRealtimeUpdates from "../hooks/useRealtimeUpdates";
-import Modal from "../components/Modal";
+import useSessionState from "../hooks/useSessionState";
+import { useDialog } from "../components/DialogProvider";
+import Dropdown from "../components/Dropdown";
 import toast from "react-hot-toast";
-import { Plus, Trash2, Pencil, Search, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, X, Globe, BookOpen } from "lucide-react";
 
 function InlineChip({ item, selected, onSelect, onRename, onDelete }) {
     const [editing, setEditing] = useState(false);
@@ -31,7 +33,7 @@ function InlineChip({ item, selected, onSelect, onRename, onDelete }) {
 
     if (editing) {
         return (
-            <div className="inline-flex items-center border border-gray-800 px-2 py-0.5">
+            <div className="inline-flex items-center px-2 py-0.5">
                 <input
                     ref={inputRef}
                     value={value}
@@ -41,23 +43,38 @@ function InlineChip({ item, selected, onSelect, onRename, onDelete }) {
                         if (e.key === "Escape") { setEditing(false); setValue(item.name); }
                     }}
                     onBlur={save}
-                    className="text-xs border-none outline-none bg-transparent w-24"
+                    className="input-premium text-xs w-24"
+                    style={{ padding: "2px 6px", height: "auto" }}
                 />
             </div>
         );
     }
 
     return (
-        <div className={`inline-flex items-center gap-1 border px-2 py-0.5 text-xs cursor-pointer ${
-            selected ? "border-gray-800 font-medium" : "border-gray-300 text-gray-600"
-        }`}>
+        <div
+            className="inline-flex items-center gap-1 px-2 py-0.5 text-xs cursor-pointer rounded-md"
+            style={selected
+                ? { background: "var(--n-accent)", color: "#000", border: "1px solid var(--n-accent)" }
+                : { background: "var(--n-hover)", border: "1px solid var(--n-border)", color: "var(--n-fg)" }
+            }
+        >
             <button onClick={onSelect} className="whitespace-nowrap">
                 {item.name} ({item.cards_count ?? 0})
             </button>
-            <button onClick={() => setEditing(true)} className="text-gray-400 hover:text-gray-700" title="Переименовать">
+            <button
+                onClick={() => setEditing(true)}
+                title="Переименовать"
+                className="opacity-40 hover:opacity-100 transition-opacity"
+                style={{ color: "var(--n-dim)" }}
+            >
                 <Pencil size={10} />
             </button>
-            <button onClick={() => onDelete(item.id)} className="text-gray-400 hover:text-gray-700" title="Удалить">
+            <button
+                onClick={() => onDelete(item.id)}
+                title="Удалить"
+                className="opacity-40 hover:opacity-100 transition-opacity"
+                style={{ color: "var(--n-dim)" }}
+            >
                 <Trash2 size={10} />
             </button>
         </div>
@@ -68,15 +85,17 @@ export default function TextbookManagePage() {
     const { user } = useAuth();
     const canAssign = hasPermission(user, "textbooks.manage_assignments");
     const isSuperuser = user?.is_superuser;
+    const dialog = useDialog();
 
     const [sections, setSections] = useState([]);
     const [categories, setCategories] = useState([]);
     const [cards, setCards] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const [selectedSection, setSelectedSection] = useState(null);
+    const [selectedSection, setSelectedSection] = useSessionState("tbManage:section", null);
+    const [filters, setFilters] = useSessionState("tbManage:filters", { section: "", category: "", search: "" });
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(filters.search || "");
     const [allCompanies, setAllCompanies] = useState(false);
 
     const [modalOpen, setModalOpen] = useState(false);
@@ -114,7 +133,8 @@ export default function TextbookManagePage() {
     };
 
     const handleDeleteSection = async (id) => {
-        if (!confirm("Удалить раздел? Карточки останутся без раздела.")) return;
+        const ok = await dialog.confirm("Удалить раздел?", "Карточки останутся без раздела.", { destructive: true });
+        if (!ok) return;
         try {
             await deleteSection(id);
             if (selectedSection === id) setSelectedSection(null);
@@ -134,7 +154,8 @@ export default function TextbookManagePage() {
     };
 
     const handleDeleteCategory = async (id) => {
-        if (!confirm("Удалить категорию? Карточки останутся без категории.")) return;
+        const ok = await dialog.confirm("Удалить категорию?", "Карточки останутся без категории.", { destructive: true });
+        if (!ok) return;
         try {
             await deleteCategory(id);
             if (selectedCategory === id) setSelectedCategory(null);
@@ -145,7 +166,8 @@ export default function TextbookManagePage() {
     };
 
     const handleDeleteCard = async (id) => {
-        if (!confirm("Удалить карточку?")) return;
+        const ok = await dialog.confirm("Удалить карточку?", "Действие необратимо.", { destructive: true });
+        if (!ok) return;
         try {
             await deleteCard(id);
             loadAll();
@@ -180,57 +202,77 @@ export default function TextbookManagePage() {
         ? categories.filter((c) => c.section === selectedSection)
         : [];
 
+    // Dropdown options
+    const sectionOptions = sections.map((s) => ({ value: s.id, label: s.name }));
+    const categoryOptions = (filters.section
+        ? categories.filter((c) => String(c.section) === String(filters.section))
+        : categories
+    ).map((c) => ({ value: c.id, label: c.name }));
+
     let filteredCards = cards;
-    if (selectedSection) filteredCards = filteredCards.filter((c) => c.section === selectedSection);
-    if (selectedCategory) filteredCards = filteredCards.filter((c) => c.category === selectedCategory);
+    if (filters.section) filteredCards = filteredCards.filter((c) => String(c.section) === String(filters.section));
+    if (filters.category) filteredCards = filteredCards.filter((c) => String(c.category) === String(filters.category));
     if (searchQuery.length >= 2) {
         const q = searchQuery.toLowerCase();
         filteredCards = filteredCards.filter((c) => c.name.toLowerCase().includes(q));
     }
 
-    if (loading) return <p className="text-center py-8 text-gray-500">Загрузка...</p>;
+    if (loading) return (
+        <div className="surface-empty">
+            <p>Загрузка...</p>
+        </div>
+    );
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-lg font-semibold">Управление учебниками</h1>
+        <div className="page-shell page-stack">
+            {/* Header */}
+            <div className="page-header">
+                <div>
+                    <h1 className="page-title">Настройка учебников</h1>
+                    <p className="page-subtitle">Управление разделами, категориями и карточками</p>
+                </div>
                 <div className="flex items-center gap-2">
                     {canAssign && (
-                        <Link
-                            to="/textbooks/assignments"
-                            className="text-sm border border-gray-300 px-2 py-1 hover:bg-gray-50"
-                        >
+                        <Link to="/textbooks/assignments" className="btn-surface">
                             Распределение
                         </Link>
                     )}
-                    <Link
-                        to="/textbooks/manage/card/new"
-                        className="flex items-center gap-1 text-sm border border-gray-800 px-2 py-1 hover:bg-gray-50"
-                    >
+                    <Link to="/textbooks/manage/card/new" className="btn-save flex items-center gap-1">
                         <Plus size={14} /> Новая карточка
                     </Link>
                 </div>
             </div>
 
+            {/* All companies checkbox */}
             {isSuperuser && (
-                <label className="flex items-center gap-2 mb-4 text-sm">
+                <label className="check-premium flex items-center gap-2 text-sm cursor-pointer w-fit">
                     <input
                         type="checkbox"
                         checked={allCompanies}
                         onChange={(e) => setAllCompanies(e.target.checked)}
+                        className="check-premium"
                     />
+                    <Globe size={14} style={{ color: "var(--n-dim)" }} />
                     Все компании
                 </label>
             )}
 
-            <div className="mb-4">
-                <p className="text-xs text-gray-500 mb-1">Разделы</p>
-                <div className="flex flex-wrap gap-1 items-center">
+            {/* Sections panel */}
+            <div className="surface-panel">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="section-title">Разделы</p>
+                    <button onClick={() => openModal("section")} className="btn-ghost flex items-center gap-1 text-xs">
+                        <Plus size={12} /> Добавить
+                    </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5 items-center">
                     <button
                         onClick={() => { setSelectedSection(null); setSelectedCategory(null); }}
-                        className={`text-xs px-2 py-0.5 border ${
-                            !selectedSection ? "border-gray-800 font-medium" : "border-gray-300 text-gray-600"
-                        }`}
+                        className="inline-flex items-center px-2 py-0.5 text-xs rounded-md transition-colors"
+                        style={!selectedSection
+                            ? { background: "var(--n-accent)", color: "#000", border: "1px solid var(--n-accent)" }
+                            : { background: "var(--n-hover)", border: "1px solid var(--n-border)", color: "var(--n-fg)" }
+                        }
                     >
                         Все
                     </button>
@@ -244,24 +286,26 @@ export default function TextbookManagePage() {
                             onDelete={handleDeleteSection}
                         />
                     ))}
-                    <button
-                        onClick={() => openModal("section")}
-                        className="text-xs border border-dashed border-gray-400 px-2 py-0.5 text-gray-500 hover:border-gray-600 hover:text-gray-700"
-                    >
-                        <Plus size={10} className="inline" /> Раздел
-                    </button>
                 </div>
             </div>
 
+            {/* Categories panel */}
             {selectedSection && (
-                <div className="mb-4">
-                    <p className="text-xs text-gray-500 mb-1">Категории</p>
-                    <div className="flex flex-wrap gap-1 items-center">
+                <div className="surface-panel">
+                    <div className="flex items-center justify-between mb-3">
+                        <p className="section-title">Категории</p>
+                        <button onClick={() => openModal("category")} className="btn-ghost flex items-center gap-1 text-xs">
+                            <Plus size={12} /> Добавить
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 items-center">
                         <button
                             onClick={() => setSelectedCategory(null)}
-                            className={`text-xs px-2 py-0.5 border ${
-                                !selectedCategory ? "border-gray-800 font-medium" : "border-gray-300 text-gray-600"
-                            }`}
+                            className="inline-flex items-center px-2 py-0.5 text-xs rounded-md transition-colors"
+                            style={!selectedCategory
+                                ? { background: "var(--n-accent)", color: "#000", border: "1px solid var(--n-accent)" }
+                                : { background: "var(--n-hover)", border: "1px solid var(--n-border)", color: "var(--n-fg)" }
+                            }
                         >
                             Все
                         </button>
@@ -275,105 +319,139 @@ export default function TextbookManagePage() {
                                 onDelete={handleDeleteCategory}
                             />
                         ))}
-                        <button
-                            onClick={() => openModal("category")}
-                            className="text-xs border border-dashed border-gray-400 px-2 py-0.5 text-gray-500 hover:border-gray-600 hover:text-gray-700"
-                        >
-                            <Plus size={10} className="inline" /> Категория
-                        </button>
                     </div>
                 </div>
             )}
 
-            <div className="relative mb-4">
-                <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                    placeholder="Поиск по названию..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full border border-gray-300 pl-7 pr-8 py-1.5 text-sm"
+            {/* Search & filter toolbar */}
+            <div className="surface-toolbar flex flex-wrap items-center gap-3">
+                <Dropdown
+                    placeholder="Все разделы"
+                    value={filters.section}
+                    onChange={(val) => setFilters((f) => ({ ...f, section: val, category: "" }))}
+                    options={sectionOptions}
+                    className="min-w-[160px] flex-1"
                 />
-                {searchQuery && (
-                    <button
-                        onClick={() => setSearchQuery("")}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                        <X size={14} />
-                    </button>
-                )}
+                <Dropdown
+                    placeholder="Все категории"
+                    value={filters.category}
+                    onChange={(val) => setFilters((f) => ({ ...f, category: val }))}
+                    options={categoryOptions}
+                    className="min-w-[160px] flex-1"
+                />
+                <div className="relative flex-[2] min-w-[200px]">
+                    <Search
+                        size={14}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                        style={{ color: "var(--n-dim)" }}
+                    />
+                    <input
+                        placeholder="Поиск по названию..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setFilters((f) => ({ ...f, search: e.target.value }));
+                        }}
+                        className="input-premium w-full pl-8 pr-8"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => {
+                                setSearchQuery("");
+                                setFilters((f) => ({ ...f, search: "" }));
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity opacity-60 hover:opacity-100"
+                            style={{ color: "var(--n-dim)" }}
+                        >
+                            <X size={14} />
+                        </button>
+                    )}
+                </div>
             </div>
 
-            <div className="space-y-1">
+            {/* Card list */}
+            <div className="space-y-2">
                 {filteredCards.map((card) => (
-                    <div key={card.id} className="border border-gray-200 p-2 flex items-center justify-between hover:border-gray-400 transition-colors">
+                    <Link
+                        key={card.id}
+                        to={`/textbooks/manage/card/${card.id}/edit`}
+                        className="surface-panel flex items-center justify-between gap-3 hover:opacity-90 transition-opacity no-underline"
+                    >
                         <div className="flex items-center gap-3 min-w-0">
                             {card.first_photo ? (
-                                <img src={card.first_photo} alt="" className="w-10 h-10 object-cover border border-gray-200 flex-none" />
+                                <img
+                                    src={card.first_photo}
+                                    alt=""
+                                    className="w-10 h-10 object-cover rounded-lg flex-none"
+                                    style={{ border: "1px solid var(--n-border)" }}
+                                />
                             ) : (
-                                <div className="w-10 h-10 bg-gray-50 border border-gray-200 flex-none" />
+                                <div
+                                    className="w-10 h-10 rounded-lg flex-none flex items-center justify-center"
+                                    style={{ color: "var(--n-dim)", background: "var(--n-hover)" }}
+                                >
+                                    <BookOpen size={16} />
+                                </div>
                             )}
                             <div className="min-w-0">
-                                <p className="text-sm font-medium truncate">{card.name}</p>
+                                <p className="text-sm font-medium truncate" style={{ color: "var(--n-fg)" }}>
+                                    {card.name}
+                                </p>
                                 {(card.section_name || card.category_name) && (
-                                    <p className="text-[10px] text-gray-400 truncate">
+                                    <p className="text-muted text-[11px] truncate">
                                         {[card.section_name, card.category_name].filter(Boolean).join(" / ")}
                                     </p>
                                 )}
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-none">
-                            <Link
-                                to={`/textbooks/manage/card/${card.id}/edit`}
-                                className="text-gray-400 hover:text-gray-700"
-                                title="Редактировать"
-                            >
-                                <Pencil size={14} />
-                            </Link>
-                            <button
-                                onClick={() => handleDeleteCard(card.id)}
-                                className="text-gray-400 hover:text-gray-700"
-                                title="Удалить"
-                            >
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                    </div>
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteCard(card.id); }}
+                            className="btn-danger flex-none"
+                            title="Удалить"
+                            style={{ padding: "4px 8px", fontSize: "12px" }}
+                        >
+                            <Trash2 size={13} />
+                        </button>
+                    </Link>
                 ))}
                 {filteredCards.length === 0 && (
-                    <p className="text-sm text-gray-400 text-center py-8">Нет карточек</p>
+                    <div className="surface-empty">
+                        <BookOpen size={32} style={{ color: "var(--n-dim)" }} />
+                        <p>Нет карточек</p>
+                    </div>
                 )}
             </div>
 
-            <Modal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-                title={modalType === "section" ? "Новый раздел" : "Новая категория"}
-            >
-                <div className="space-y-3">
-                    <input
-                        value={modalName}
-                        onChange={(e) => setModalName(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") handleModalSave(); }}
-                        placeholder="Название"
-                        className="w-full border border-gray-300 px-2 py-1.5 text-sm"
-                        autoFocus
-                    />
-                    <div className="flex justify-end gap-2">
-                        <button
-                            onClick={() => setModalOpen(false)}
-                            className="text-sm border border-gray-300 px-3 py-1 hover:bg-gray-50"
-                        >
-                            Отмена
-                        </button>
-                        <button
-                            onClick={handleModalSave}
-                            className="text-sm border border-gray-800 px-3 py-1 hover:bg-gray-50"
-                        >
-                            Создать
-                        </button>
+            {/* Inline modal */}
+            {modalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/60" onClick={() => setModalOpen(false)} />
+                    <div
+                        className="relative max-w-sm w-full rounded-[24px] p-6 space-y-4"
+                        style={{
+                            background: "linear-gradient(145deg, var(--n-panel), var(--n-card))",
+                            border: "1px solid var(--n-border)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                        }}
+                    >
+                        <h3 className="text-lg font-semibold" style={{ color: "var(--n-fg)" }}>
+                            {modalType === "section" ? "Новый раздел" : "Новая категория"}
+                        </h3>
+                        <input
+                            className="input-premium w-full"
+                            autoFocus
+                            value={modalName}
+                            onChange={(e) => setModalName(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") handleModalSave(); if (e.key === "Escape") setModalOpen(false); }}
+                            placeholder="Название"
+                        />
+                        <div className="flex justify-end gap-2">
+                            <button className="btn-surface" onClick={() => setModalOpen(false)}>Отмена</button>
+                            <button className="btn-save" onClick={handleModalSave}>Сохранить</button>
+                        </div>
                     </div>
                 </div>
-            </Modal>
+            )}
         </div>
     );
 }

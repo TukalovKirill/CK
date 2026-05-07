@@ -72,6 +72,13 @@ export function hasPermission(user, code) {
   return user.permissions.includes(code);
 }
 
+export function getUserUnitsForPermission(user, code) {
+  if (!user?.unit_permissions) return null;
+  return Object.entries(user.unit_permissions)
+    .filter(([, codes]) => codes.includes(code))
+    .map(([unitId]) => Number(unitId));
+}
+
 export function hasPermissionInUnit(user, code, unitId) {
   if (!user?.unit_permissions) return true;
   const codes = user.unit_permissions[String(unitId)];

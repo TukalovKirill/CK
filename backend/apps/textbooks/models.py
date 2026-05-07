@@ -175,3 +175,6 @@ class CardAssignment(models.Model):
         ]
         verbose_name = "Назначение карточки"
         verbose_name_plural = "Назначения карточек"
+
+
+from .quiz_models import *  # noqa: E402, F401, F403
