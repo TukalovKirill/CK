@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useAuth, hasPermission } from "../context/AuthContext";
 import {
   BookOpen, Settings, Users, MapPin, User, Bell,
-  ChevronDown,
+  ChevronDown, ClipboardList,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -15,6 +15,16 @@ const NAV_GROUPS = [
     links: [
       { to: "/textbooks", label: "Просмотр", permission: "textbooks.view" },
       { to: "/textbooks/manage", label: "Управление", permission: "textbooks.edit" },
+    ],
+  },
+  {
+    key: "quizzes",
+    label: "Тесты",
+    icon: ClipboardList,
+    links: [
+      { to: "/quizzes", label: "Мои тесты", permission: "quizzes.take" },
+      { to: "/quizzes/results", label: "Результаты", permission: "quizzes.view_stats" },
+      { to: "/quizzes/settings", label: "Настройки", permission: "quizzes.manage_templates" },
     ],
   },
   {
