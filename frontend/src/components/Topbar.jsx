@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Menu, LogOut, Bell } from "lucide-react";
+import { Menu, LogOut, Bell, Coins } from "lucide-react";
 import { useState } from "react";
 
 export default function Topbar({ onToggleSidebar }) {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [rotated, setRotated] = useState(false);
 
@@ -13,6 +13,8 @@ export default function Topbar({ onToggleSidebar }) {
     onToggleSidebar();
     setTimeout(() => setRotated(false), 300);
   };
+
+  const coinBalance = user?.coin_balance ?? 0;
 
   return (
     <header className="app-topbar px-4">
@@ -34,6 +36,14 @@ export default function Topbar({ onToggleSidebar }) {
       </div>
 
       <div className="absolute right-4 flex items-center gap-2">
+        <button
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg btn-ghost text-sm font-medium"
+          onClick={() => navigate("/shop")}
+          title="СК Коины"
+        >
+          <Coins size={16} style={{ color: "var(--n-accent)" }} />
+          <span>{coinBalance}</span>
+        </button>
         <button
           className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg btn-ghost relative"
           onClick={() => navigate("/notifications")}

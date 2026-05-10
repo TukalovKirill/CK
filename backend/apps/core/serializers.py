@@ -51,6 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
     can_manage_permissions = serializers.SerializerMethodField()
     birth_date = serializers.SerializerMethodField()
     assignments = serializers.SerializerMethodField()
+    coin_balance = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -58,7 +59,7 @@ class UserSerializer(serializers.ModelSerializer):
             "id", "email", "role", "company", "is_superuser",
             "employee_id", "org_role_id", "org_role_code", "org_role_title",
             "permissions", "unit_permissions", "can_manage_permissions",
-            "birth_date", "assignments",
+            "birth_date", "assignments", "coin_balance",
         )
 
     def _first_assignment_role(self, obj):
@@ -125,6 +126,15 @@ class UserSerializer(serializers.ModelSerializer):
             emp.assignments.select_related("unit", "department", "org_role").all(),
             many=True,
         ).data
+
+    def get_coin_balance(self, obj):
+        emp = getattr(obj, "employee_profile", None)
+        if not emp:
+            return 0
+        balance_obj = getattr(emp, "coin_balance", None)
+        if balance_obj is None:
+            return 0
+        return balance_obj.balance
 
 
 # --- Company ---

@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useAuth, hasPermission } from "../context/AuthContext";
 import {
   BookOpen, Settings, Users, MapPin, User, Bell,
-  ChevronDown, ClipboardList,
+  ChevronDown, ClipboardList, ShoppingBag,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -25,6 +25,19 @@ const NAV_GROUPS = [
       { to: "/quizzes", label: "Мои тесты", permission: "quizzes.take" },
       { to: "/quizzes/results", label: "Результаты", permission: "quizzes.view_stats" },
       { to: "/quizzes/settings", label: "Настройки", permission: "quizzes.manage_templates" },
+    ],
+  },
+  {
+    key: "shop",
+    label: "Магазин",
+    icon: ShoppingBag,
+    links: [
+      { to: "/shop", label: "Витрина", permission: "shop.view" },
+      { to: "/shop/my-items", label: "Мои товары", permission: "shop.view" },
+      { to: "/shop/history", label: "История", permission: "shop.view" },
+      { to: "/shop/manage", label: "Управление", permission: "shop.edit" },
+      { to: "/shop/coins", label: "Коины", permission: "shop.manage_coins" },
+      { to: "/shop/orders", label: "Заказы", permission: "shop.manage_orders" },
     ],
   },
   {
