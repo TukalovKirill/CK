@@ -60,3 +60,9 @@ export const rejectOrder = (id) => axiosInstance.post(`${BASE}orders/${id}/rejec
 // My Items
 export const getMyItems = () => axiosInstance.get(`${BASE}my-items/`);
 export const activateItem = (id) => axiosInstance.post(`${BASE}my-items/${id}/activate/`);
+
+// Refunds
+export const getRefunds = (params) => axiosInstance.get(`${BASE}refunds/`, { params });
+export const createRefund = (data) => axiosInstance.post(`${BASE}refunds/`, data);
+export const approveRefund = (id) => axiosInstance.post(`${BASE}refunds/${id}/approve/`);
+export const rejectRefund = (id) => axiosInstance.post(`${BASE}refunds/${id}/reject/`);

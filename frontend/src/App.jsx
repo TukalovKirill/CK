@@ -28,6 +28,7 @@ import ShopManagePage from "./pages/ShopManagePage";
 import ShopItemEditPage from "./pages/ShopItemEditPage";
 import ShopCoinsPage from "./pages/ShopCoinsPage";
 import ShopOrdersPage from "./pages/ShopOrdersPage";
+import ShopAMLPage from "./pages/ShopAMLPage";
 
 export default function App() {
   return (
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/shop/manage/item/:id/edit" element={<RequirePermission code="shop.edit"><ShopItemEditPage /></RequirePermission>} />
           <Route path="/shop/coins" element={<RequirePermission code="shop.manage_coins"><ShopCoinsPage /></RequirePermission>} />
           <Route path="/shop/orders" element={<RequirePermission code="shop.manage_orders"><ShopOrdersPage /></RequirePermission>} />
+          <Route path="/shop/aml" element={<RequirePermission code="shop.review_flagged"><ShopAMLPage /></RequirePermission>} />
         </Route>
       </Route>
 

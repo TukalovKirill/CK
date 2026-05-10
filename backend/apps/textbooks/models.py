@@ -32,13 +32,13 @@ class CompanyTextbookSettings(models.Model):
 
 class TextbookSection(models.Model):
     company = models.ForeignKey(
-        "core.Company", on_delete=CASCADE, related_name="textbook_sections"
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="textbook_sections"
     )
-    units = models.ManyToManyField("core.Unit", blank=True, related_name="textbook_sections")
-    name = models.CharField(max_length=200)
-    order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    units = models.ManyToManyField("core.Unit", verbose_name="Юниты", blank=True, related_name="textbook_sections")
+    name = models.CharField("Название", max_length=200)
+    order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Активен", default=True)
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
 
     class Meta:
         db_table = "textbook_sections"
@@ -52,9 +52,9 @@ class TextbookSection(models.Model):
 
 
 class TextbookCategory(models.Model):
-    section = models.ForeignKey(TextbookSection, on_delete=CASCADE, related_name="categories")
-    name = models.CharField(max_length=200)
-    order = models.PositiveIntegerField(default=0)
+    section = models.ForeignKey(TextbookSection, verbose_name="Раздел", on_delete=CASCADE, related_name="categories")
+    name = models.CharField("Название", max_length=200)
+    order = models.PositiveIntegerField("Порядок", default=0)
 
     class Meta:
         db_table = "textbook_categories"
@@ -69,22 +69,22 @@ class TextbookCategory(models.Model):
 
 class TextbookCard(models.Model):
     company = models.ForeignKey(
-        "core.Company", on_delete=CASCADE, related_name="textbook_cards"
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="textbook_cards"
     )
     section = models.ForeignKey(
-        TextbookSection, on_delete=SET_NULL, null=True, blank=True, related_name="cards"
+        TextbookSection, verbose_name="Раздел", on_delete=SET_NULL, null=True, blank=True, related_name="cards"
     )
     category = models.ForeignKey(
-        TextbookCategory, on_delete=SET_NULL, null=True, blank=True, related_name="cards"
+        TextbookCategory, verbose_name="Категория", on_delete=SET_NULL, null=True, blank=True, related_name="cards"
     )
-    name = models.CharField(max_length=300, db_index=True)
-    order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
+    name = models.CharField("Название", max_length=300, db_index=True)
+    order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Активна", default=True)
     created_by = models.ForeignKey(
-        "core.CustomUser", on_delete=SET_NULL, null=True, blank=True, related_name="+"
+        "core.CustomUser", verbose_name="Автор", on_delete=SET_NULL, null=True, blank=True, related_name="+"
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
+    updated_at = models.DateTimeField("Обновлено", auto_now=True)
 
     class Meta:
         db_table = "textbook_cards"
@@ -102,14 +102,14 @@ class CardParagraph(models.Model):
         FRONT = "front", "Основной"
         DETAIL = "detail", "Подробность"
 
-    card = models.ForeignKey(TextbookCard, on_delete=CASCADE, related_name="paragraphs")
+    card = models.ForeignKey(TextbookCard, verbose_name="Карточка", on_delete=CASCADE, related_name="paragraphs")
     paragraph_type = models.CharField(
-        max_length=10, choices=ParagraphType.choices, default="front"
+        "Тип", max_length=10, choices=ParagraphType.choices, default="front"
     )
-    label = models.CharField(max_length=200)
-    text = models.TextField()
-    order = models.PositiveIntegerField(default=0)
-    photo = models.ImageField(upload_to=paragraph_photo_upload_path, null=True, blank=True)
+    label = models.CharField("Заголовок", max_length=200)
+    text = models.TextField("Текст")
+    order = models.PositiveIntegerField("Порядок", default=0)
+    photo = models.ImageField("Фото", upload_to=paragraph_photo_upload_path, null=True, blank=True)
 
     class Meta:
         db_table = "textbook_card_paragraphs"
@@ -122,8 +122,8 @@ class CardParagraph(models.Model):
 
 
 class CardTag(models.Model):
-    card = models.ForeignKey(TextbookCard, on_delete=CASCADE, related_name="tags")
-    tag = models.CharField(max_length=100, db_index=True)
+    card = models.ForeignKey(TextbookCard, verbose_name="Карточка", on_delete=CASCADE, related_name="tags")
+    tag = models.CharField("Тег", max_length=100, db_index=True)
 
     class Meta:
         db_table = "textbook_card_tags"
@@ -136,10 +136,10 @@ class CardTag(models.Model):
 
 
 class CardPhoto(models.Model):
-    card = models.ForeignKey(TextbookCard, on_delete=CASCADE, related_name="photos")
-    file = models.ImageField(upload_to=card_photo_upload_path)
-    order = models.PositiveIntegerField(default=0)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    card = models.ForeignKey(TextbookCard, verbose_name="Карточка", on_delete=CASCADE, related_name="photos")
+    file = models.ImageField("Файл", upload_to=card_photo_upload_path)
+    order = models.PositiveIntegerField("Порядок", default=0)
+    uploaded_at = models.DateTimeField("Загружено", auto_now_add=True)
 
     class Meta:
         db_table = "textbook_card_photos"
@@ -149,20 +149,20 @@ class CardPhoto(models.Model):
 
 
 class CardAssignment(models.Model):
-    card = models.ForeignKey(TextbookCard, on_delete=CASCADE, related_name="assignments")
+    card = models.ForeignKey(TextbookCard, verbose_name="Карточка", on_delete=CASCADE, related_name="assignments")
     unit = models.ForeignKey(
-        "core.Unit", on_delete=CASCADE, related_name="textbook_assignments"
+        "core.Unit", verbose_name="Юнит", on_delete=CASCADE, related_name="textbook_assignments"
     )
     department = models.ForeignKey(
-        "core.Department", on_delete=CASCADE, null=True, blank=True
+        "core.Department", verbose_name="Департамент", on_delete=CASCADE, null=True, blank=True
     )
     org_role = models.ForeignKey(
-        "core.OrgRole", on_delete=CASCADE, null=True, blank=True
+        "core.OrgRole", verbose_name="Роль", on_delete=CASCADE, null=True, blank=True
     )
     assigned_by = models.ForeignKey(
-        "core.CustomUser", on_delete=SET_NULL, null=True, blank=True, related_name="+"
+        "core.CustomUser", verbose_name="Назначил", on_delete=SET_NULL, null=True, blank=True, related_name="+"
     )
-    assigned_at = models.DateTimeField(auto_now_add=True)
+    assigned_at = models.DateTimeField("Дата назначения", auto_now_add=True)
 
     class Meta:
         db_table = "textbook_card_assignments"

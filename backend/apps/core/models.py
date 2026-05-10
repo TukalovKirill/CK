@@ -76,7 +76,7 @@ class CustomUser(AbstractUser):
 
 
 class Unit(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="units")
+    company = models.ForeignKey(Company, verbose_name="Компания", on_delete=models.CASCADE, related_name="units")
     name = models.CharField("Название", max_length=255)
     is_active = models.BooleanField("Активен", default=True)
     sort_order = models.PositiveIntegerField("Порядок", default=0)
@@ -95,8 +95,8 @@ class Unit(models.Model):
 
 
 class Department(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="departments")
-    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name="departments")
+    company = models.ForeignKey(Company, verbose_name="Компания", on_delete=models.CASCADE, related_name="departments")
+    unit = models.ForeignKey(Unit, verbose_name="Юнит", on_delete=models.CASCADE, related_name="departments")
     name = models.CharField("Название", max_length=255)
     code = models.SlugField("Код", blank=True, default="")
     sort_order = models.PositiveIntegerField("Порядок", default=0)
@@ -128,9 +128,9 @@ class OrgPermission(models.Model):
 
 
 class OrgRole(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="org_roles")
+    company = models.ForeignKey(Company, verbose_name="Компания", on_delete=models.CASCADE, related_name="org_roles")
     department = models.ForeignKey(
-        Department, on_delete=models.SET_NULL, null=True, blank=True, related_name="roles"
+        Department, verbose_name="Департамент", on_delete=models.SET_NULL, null=True, blank=True, related_name="roles"
     )
     code = models.SlugField("Код", max_length=100)
     title = models.CharField("Название", max_length=255)
@@ -138,9 +138,9 @@ class OrgRole(models.Model):
         "Уровень", default=0, validators=[MaxValueValidator(10)]
     )
     parent_role = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="child_roles"
+        "self", verbose_name="Родительская роль", on_delete=models.SET_NULL, null=True, blank=True, related_name="child_roles"
     )
-    permissions = models.ManyToManyField(OrgPermission, blank=True, related_name="roles")
+    permissions = models.ManyToManyField(OrgPermission, verbose_name="Разрешения", blank=True, related_name="roles")
     can_manage_permissions = models.BooleanField("Может управлять правами", default=False)
     group = models.CharField("Группа", max_length=255, blank=True, default="")
     is_assignable = models.BooleanField("Назначаема через UI", default=True)
@@ -184,9 +184,9 @@ class OrgRole(models.Model):
 
 
 class Zone(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="zones")
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="zones")
-    org_role = models.ForeignKey(OrgRole, on_delete=models.CASCADE, related_name="zones")
+    company = models.ForeignKey(Company, verbose_name="Компания", on_delete=models.CASCADE, related_name="zones")
+    department = models.ForeignKey(Department, verbose_name="Департамент", on_delete=models.CASCADE, related_name="zones")
+    org_role = models.ForeignKey(OrgRole, verbose_name="Роль", on_delete=models.CASCADE, related_name="zones")
     name = models.CharField("Название", max_length=255)
 
     class Meta:
@@ -199,14 +199,14 @@ class Zone(models.Model):
 
 
 class Employee(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="employees")
+    company = models.ForeignKey(Company, verbose_name="Компания", on_delete=models.CASCADE, related_name="employees")
     user = models.OneToOneField(
-        CustomUser, on_delete=models.CASCADE, related_name="employee_profile", null=True, blank=True
+        CustomUser, verbose_name="Пользователь", on_delete=models.CASCADE, related_name="employee_profile", null=True, blank=True
     )
     org_role = models.ForeignKey(
-        OrgRole, on_delete=models.SET_NULL, null=True, blank=True, related_name="employees"
+        OrgRole, verbose_name="Должность", on_delete=models.SET_NULL, null=True, blank=True, related_name="employees"
     )
-    units = models.ManyToManyField(Unit, blank=True, related_name="employees")
+    units = models.ManyToManyField(Unit, verbose_name="Юниты", blank=True, related_name="employees")
     full_name = models.CharField("ФИО", max_length=255, blank=True, default="")
     birth_date = models.DateField("Дата рождения", null=True, blank=True)
     grade = models.PositiveSmallIntegerField(
@@ -239,12 +239,12 @@ class Employee(models.Model):
 
 
 class EmployeeAssignment(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="assignments")
-    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name="assignments")
+    employee = models.ForeignKey(Employee, verbose_name="Сотрудник", on_delete=models.CASCADE, related_name="assignments")
+    unit = models.ForeignKey(Unit, verbose_name="Юнит", on_delete=models.CASCADE, related_name="assignments")
     department = models.ForeignKey(
-        Department, on_delete=models.CASCADE, null=True, blank=True, related_name="assignments"
+        Department, verbose_name="Департамент", on_delete=models.CASCADE, null=True, blank=True, related_name="assignments"
     )
-    org_role = models.ForeignKey(OrgRole, on_delete=models.CASCADE, related_name="assignments")
+    org_role = models.ForeignKey(OrgRole, verbose_name="Роль", on_delete=models.CASCADE, related_name="assignments")
 
     class Meta:
         verbose_name = "Назначение сотрудника"
@@ -260,9 +260,9 @@ class EmployeeAssignment(models.Model):
 
 
 class Invite(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="invites")
+    company = models.ForeignKey(Company, verbose_name="Компания", on_delete=models.CASCADE, related_name="invites")
     invited_by = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_invites"
+        CustomUser, verbose_name="Пригласил", on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_invites"
     )
     email = models.EmailField("Email")
     first_name = models.CharField("Имя", max_length=150, blank=True, default="")
@@ -270,9 +270,9 @@ class Invite(models.Model):
     grade = models.PositiveSmallIntegerField(
         "Грейд", default=0, validators=[MinValueValidator(0), MaxValueValidator(5)]
     )
-    org_role = models.ForeignKey(OrgRole, on_delete=models.SET_NULL, null=True, blank=True)
-    unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    org_role = models.ForeignKey(OrgRole, verbose_name="Роль", on_delete=models.SET_NULL, null=True, blank=True)
+    unit = models.ForeignKey(Unit, verbose_name="Юнит", on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey(Department, verbose_name="Департамент", on_delete=models.SET_NULL, null=True, blank=True)
     token = models.CharField("Токен", max_length=64, unique=True, db_index=True)
     expires_at = models.DateTimeField("Истекает")
     STATUS = (
@@ -306,12 +306,12 @@ class Invite(models.Model):
 
 
 class InviteAssignment(models.Model):
-    invite = models.ForeignKey(Invite, on_delete=models.CASCADE, related_name="invite_assignments")
-    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name="invite_assignments")
+    invite = models.ForeignKey(Invite, verbose_name="Приглашение", on_delete=models.CASCADE, related_name="invite_assignments")
+    unit = models.ForeignKey(Unit, verbose_name="Юнит", on_delete=models.CASCADE, related_name="invite_assignments")
     department = models.ForeignKey(
-        Department, on_delete=models.CASCADE, null=True, blank=True, related_name="invite_assignments"
+        Department, verbose_name="Департамент", on_delete=models.CASCADE, null=True, blank=True, related_name="invite_assignments"
     )
-    org_role = models.ForeignKey(OrgRole, on_delete=models.CASCADE, related_name="invite_assignments")
+    org_role = models.ForeignKey(OrgRole, verbose_name="Роль", on_delete=models.CASCADE, related_name="invite_assignments")
 
     class Meta:
         verbose_name = "Назначение приглашения"

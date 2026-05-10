@@ -38,6 +38,7 @@ const NAV_GROUPS = [
       { to: "/shop/manage", label: "Управление", permission: "shop.edit" },
       { to: "/shop/coins", label: "Коины", permission: "shop.manage_coins" },
       { to: "/shop/orders", label: "Заказы", permission: "shop.manage_orders" },
+      { to: "/shop/aml", label: "AML", permission: "shop.review_flagged" },
     ],
   },
   {

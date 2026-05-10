@@ -2,11 +2,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Menu, LogOut, Bell, Coins } from "lucide-react";
 import { useState } from "react";
+import useAMLNotifications from "../hooks/useAMLNotifications";
 
 export default function Topbar({ onToggleSidebar }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [rotated, setRotated] = useState(false);
+  const { pendingCount, canReview } = useAMLNotifications();
 
   const handleToggle = () => {
     setRotated(true);
@@ -44,12 +46,23 @@ export default function Topbar({ onToggleSidebar }) {
           <Coins size={16} style={{ color: "var(--n-accent)" }} />
           <span>{coinBalance}</span>
         </button>
-        <button
-          className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg btn-ghost relative"
-          onClick={() => navigate("/notifications")}
-        >
-          <Bell size={18} />
-        </button>
+        {canReview && (
+          <button
+            className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost relative"
+            onClick={() => navigate("/shop/aml")}
+            title="AML Мониторинг"
+          >
+            <Bell size={18} />
+            {pendingCount > 0 && (
+              <span
+                className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold text-white"
+                style={{ background: "#ef4444" }}
+              >
+                {pendingCount > 99 ? "99+" : pendingCount}
+              </span>
+            )}
+          </button>
+        )}
         <button
           onClick={() => { logout(); navigate("/login"); }}
           className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost"

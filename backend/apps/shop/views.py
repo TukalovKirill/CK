@@ -20,6 +20,7 @@ from .models import (
     ItemActivation,
     Order,
     PurchasedItem,
+    RefundRequest,
     ShopCategory,
     ShopItem,
     ShopSettings,
@@ -36,9 +37,11 @@ from .serializers import (
     CoinBalanceSerializer,
     CoinTransactionSerializer,
     CreateOrderSerializer,
+    CreateRefundRequestSerializer,
     ItemActivationSerializer,
     OrderSerializer,
     PurchasedItemSerializer,
+    RefundRequestSerializer,
     ShopCategorySerializer,
     ShopCategoryWriteSerializer,
     ShopItemDetailSerializer,
@@ -137,6 +140,22 @@ class ShopItemViewSet(BroadcastMixin, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(company=self.request.user.company, created_by=self.request.user)
 
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        old_price = instance.price
+        old_stock = instance.stock_quantity
+        updated = serializer.save()
+        from apps.shop.aml.item_tracking import track_price_change, track_stock_change
+        ip = self.request.META.get("HTTP_X_FORWARDED_FOR", self.request.META.get("REMOTE_ADDR"))
+        track_price_change(
+            self.request.user.company, self.request.user,
+            updated, old_price, updated.price, ip=ip,
+        )
+        track_stock_change(
+            self.request.user.company, self.request.user,
+            updated, old_stock, updated.stock_quantity, ip=ip,
+        )
+
     @action(detail=False, methods=["get"])
     def available(self, request):
         qs = self.get_queryset().filter(is_active=True)
@@ -182,6 +201,24 @@ class CoinAccrueView(APIView):
                 {"detail": "Сотрудник не найден"}, status=status.HTTP_404_NOT_FOUND
             )
 
+        from apps.shop.aml.engine import AMLEngine
+        engine = AMLEngine(request.user.company)
+        op_data = {
+            "operation_type": "accrual",
+            "amount": amount,
+            "employee_id": employee.pk,
+            "company_id": request.user.company_id,
+            "initiated_by_id": request.user.pk,
+            "comment": comment,
+        }
+        aml_result = engine.evaluate(op_data, request=request)
+        if aml_result.should_block:
+            engine.record(op_data, aml_result, request=request)
+            return Response(
+                {"detail": "Операция заблокирована системой безопасности", "flagged": True},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         balance_obj, _ = CoinBalance.objects.get_or_create(
             employee=employee, defaults={"company": request.user.company}
         )
@@ -212,6 +249,25 @@ class CoinBulkAccrueView(APIView):
         employee_ids = serializer.validated_data["employee_ids"]
         amount = serializer.validated_data["amount"]
         comment = serializer.validated_data.get("comment", "")
+
+        from apps.shop.aml.engine import AMLEngine
+        engine = AMLEngine(request.user.company)
+        op_data = {
+            "operation_type": "bulk_accrual",
+            "amount": amount,
+            "employee_ids": employee_ids,
+            "employee_count": len(employee_ids),
+            "company_id": request.user.company_id,
+            "initiated_by_id": request.user.pk,
+            "comment": comment,
+        }
+        aml_result = engine.evaluate(op_data, request=request)
+        if aml_result.should_block:
+            engine.record(op_data, aml_result, request=request)
+            return Response(
+                {"detail": "Операция заблокирована системой безопасности", "flagged": True},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         employees = Employee.objects.filter(
             pk__in=employee_ids, company=request.user.company
@@ -416,6 +472,25 @@ class OrderViewSet(BroadcastMixin, viewsets.ModelViewSet):
                 {"detail": "Заказ уже обработан"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        from apps.shop.aml.engine import AMLEngine
+        engine = AMLEngine(request.user.company)
+        op_data = {
+            "operation_type": "order_approve",
+            "company_id": request.user.company_id,
+            "initiated_by_id": request.user.pk,
+            "employee_id": order.employee_id,
+            "order_id": order.pk,
+            "item_id": order.item_id,
+            "total_price": order.total_price,
+        }
+        aml_result = engine.evaluate(op_data, request=request)
+        if aml_result.should_block:
+            engine.record(op_data, aml_result, request=request)
+            return Response(
+                {"detail": "Операция заблокирована системой безопасности", "flagged": True},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         order.status = Order.Status.COMPLETED
         order.reviewed_by = request.user
         order.reviewed_at = timezone.now()
@@ -545,3 +620,194 @@ class PurchasedItemViewSet(viewsets.ReadOnlyModelViewSet):
             )
         except Exception:
             pass
+
+
+# --- Refunds ---
+
+class RefundRequestViewSet(BroadcastMixin, viewsets.ModelViewSet):
+    broadcast_entity = "shop_refund"
+    http_method_names = ["get", "post"]
+
+    def get_permissions(self):
+        if self.action in ("approve", "reject"):
+            return [CanManageOrders()]
+        return [CanViewShop()]
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateRefundRequestSerializer
+        return RefundRequestSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = RefundRequest.objects.filter(company=user.company).select_related(
+            "purchased_item__item", "employee", "reviewed_by"
+        )
+
+        if not _is_full_access(user):
+            from apps.core.permissions import has_org_permission
+            if has_org_permission(user, "shop.manage_orders"):
+                unit_ids = get_user_unit_ids(user, "shop.manage_orders")
+                if unit_ids is not None:
+                    qs = qs.filter(purchased_item__item__unit_id__in=unit_ids)
+            else:
+                emp = getattr(user, "employee_profile", None)
+                if emp:
+                    qs = qs.filter(employee=emp)
+                else:
+                    qs = qs.none()
+
+        status_filter = self.request.query_params.get("status")
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serializer = CreateRefundRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        purchased_item_id = serializer.validated_data["purchased_item_id"]
+        reason = serializer.validated_data.get("reason", "")
+
+        emp = getattr(request.user, "employee_profile", None)
+        if not emp:
+            return Response(
+                {"detail": "Профиль сотрудника не найден"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            purchased_item = PurchasedItem.objects.get(
+                pk=purchased_item_id, employee=emp
+            )
+        except PurchasedItem.DoesNotExist:
+            return Response(
+                {"detail": "Товар не найден"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if purchased_item.is_fully_activated:
+            return Response(
+                {"detail": "Нельзя вернуть полностью активированный товар"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if purchased_item.activations.exists():
+            return Response(
+                {"detail": "Нельзя вернуть товар, который уже был активирован"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing = RefundRequest.objects.filter(
+            purchased_item=purchased_item, status=RefundRequest.Status.PENDING
+        ).exists()
+        if existing:
+            return Response(
+                {"detail": "Запрос на возврат уже создан"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        refund_amount = purchased_item.order.total_price
+
+        refund_req = RefundRequest.objects.create(
+            purchased_item=purchased_item,
+            employee=emp,
+            company=request.user.company,
+            reason=reason,
+            refund_amount=refund_amount,
+        )
+
+        self._broadcast("created", refund_req.pk, extra={
+            "sub_type": "shop_refund_created",
+            "employee_name": emp.full_name,
+            "item_name": purchased_item.item.name if purchased_item.item else "",
+        })
+
+        return Response(
+            RefundRequestSerializer(refund_req, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def approve(self, request, pk=None):
+        refund_req = self.get_object()
+        if refund_req.status != RefundRequest.Status.PENDING:
+            return Response(
+                {"detail": "Запрос уже обработан"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        purchased_item = refund_req.purchased_item
+
+        from apps.shop.aml.engine import AMLEngine
+        engine = AMLEngine(request.user.company)
+        op_data = {
+            "operation_type": "refund_approve",
+            "company_id": request.user.company_id,
+            "initiated_by_id": request.user.pk,
+            "employee_id": refund_req.employee_id,
+            "purchased_item_id": purchased_item.pk,
+            "refund_request_id": refund_req.pk,
+            "refund_amount": refund_req.refund_amount,
+        }
+        aml_result = engine.evaluate(op_data, request=request)
+        if aml_result.should_block:
+            engine.record(op_data, aml_result, request=request)
+            return Response(
+                {"detail": "Операция заблокирована системой безопасности", "flagged": True},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        refund_req.status = RefundRequest.Status.APPROVED
+        refund_req.reviewed_by = request.user
+        refund_req.reviewed_at = timezone.now()
+        refund_req.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+
+        balance_obj, _ = CoinBalance.objects.select_for_update().get_or_create(
+            employee=refund_req.employee, defaults={"company": refund_req.company}
+        )
+        balance_obj.balance += refund_req.refund_amount
+        balance_obj.save(update_fields=["balance", "updated_at"])
+
+        CoinTransaction.objects.create(
+            employee=refund_req.employee,
+            company=refund_req.company,
+            amount=refund_req.refund_amount,
+            transaction_type=CoinTransaction.TransactionType.REFUND,
+            comment=f"Возврат товара: {purchased_item.item.name if purchased_item.item else 'удалён'}",
+            related_order=purchased_item.order,
+            created_by=request.user,
+        )
+
+        if purchased_item.item and purchased_item.item.stock_quantity != -1:
+            purchased_item.item.stock_quantity += purchased_item.quantity_remaining
+            purchased_item.item.save(update_fields=["stock_quantity"])
+
+        purchased_item.delete()
+
+        self._broadcast("updated", refund_req.pk, extra={
+            "sub_type": "shop_refund_approved",
+            "employee_id": refund_req.employee_id,
+        })
+
+        return Response(RefundRequestSerializer(refund_req, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def reject(self, request, pk=None):
+        refund_req = self.get_object()
+        if refund_req.status != RefundRequest.Status.PENDING:
+            return Response(
+                {"detail": "Запрос уже обработан"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        refund_req.status = RefundRequest.Status.REJECTED
+        refund_req.reviewed_by = request.user
+        refund_req.reviewed_at = timezone.now()
+        refund_req.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+
+        self._broadcast("updated", refund_req.pk, extra={
+            "sub_type": "shop_refund_rejected",
+            "employee_id": refund_req.employee_id,
+        })
+
+        return Response(RefundRequestSerializer(refund_req, context={"request": request}).data)

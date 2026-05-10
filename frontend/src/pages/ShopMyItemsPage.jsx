@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { getMyItems, activateItem } from "../api/shop";
-import { Package, Zap, CheckCircle } from "lucide-react";
+import { getMyItems, activateItem, createRefund } from "../api/shop";
+import { Package, Zap, CheckCircle, RotateCcw } from "lucide-react";
 
 export default function ShopMyItemsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(null);
+  const [refunding, setRefunding] = useState(null);
 
   useEffect(() => {
     loadItems();
@@ -36,6 +37,28 @@ export default function ShopMyItemsPage() {
     } finally {
       setActivating(null);
     }
+  };
+
+  const handleRefund = async (item) => {
+    if (refunding) return;
+    const reason = window.prompt("Укажите причину возврата (необязательно):", "");
+    if (reason === null) return;
+
+    setRefunding(item.id);
+    try {
+      await createRefund({ purchased_item_id: item.id, reason });
+      alert("Запрос на возврат отправлен. Ожидайте подтверждения.");
+      await loadItems();
+    } catch (e) {
+      const detail = e.response?.data?.detail || "Ошибка при создании запроса на возврат";
+      alert(detail);
+    } finally {
+      setRefunding(null);
+    }
+  };
+
+  const canRefund = (item) => {
+    return !item.is_fully_activated && item.activations_count === 0;
   };
 
   if (loading) {
@@ -91,14 +114,27 @@ export default function ShopMyItemsPage() {
                     Активировано
                   </div>
                 ) : (
-                  <button
-                    onClick={() => handleActivate(item)}
-                    disabled={activating === item.id}
-                    className="mt-3 w-full py-2.5 rounded-lg font-medium text-sm flex items-center justify-center gap-2 btn-primary disabled:opacity-50"
-                  >
-                    <Zap size={16} />
-                    {activating === item.id ? "Активация..." : `Активировать (${item.quantity_remaining})`}
-                  </button>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() => handleActivate(item)}
+                      disabled={activating === item.id}
+                      className="flex-1 py-2.5 rounded-lg font-medium text-sm flex items-center justify-center gap-2 btn-primary disabled:opacity-50"
+                    >
+                      <Zap size={16} />
+                      {activating === item.id ? "..." : `Активировать (${item.quantity_remaining})`}
+                    </button>
+                    {canRefund(item) && (
+                      <button
+                        onClick={() => handleRefund(item)}
+                        disabled={refunding === item.id}
+                        className="py-2.5 px-3 rounded-lg font-medium text-sm flex items-center justify-center gap-1 btn-ghost disabled:opacity-50"
+                        title="Запросить возврат"
+                        style={{ color: "#ef4444" }}
+                      >
+                        <RotateCcw size={16} />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

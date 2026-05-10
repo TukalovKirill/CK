@@ -10,6 +10,7 @@ from .models import (
     ItemActivation,
     Order,
     PurchasedItem,
+    RefundRequest,
     ShopCategory,
     ShopItem,
     ShopSettings,
@@ -244,3 +245,49 @@ class ItemActivationSerializer(serializers.ModelSerializer):
         model = ItemActivation
         fields = ("id", "purchased_item", "activated_at")
         read_only_fields = ("purchased_item", "activated_at")
+
+
+# --- Refunds ---
+
+class RefundRequestSerializer(serializers.ModelSerializer):
+    employee_name = serializers.CharField(source="employee.full_name", read_only=True)
+    item_name = serializers.SerializerMethodField()
+    item_photo_url = serializers.SerializerMethodField()
+    reviewed_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RefundRequest
+        fields = (
+            "id", "purchased_item", "employee", "employee_name",
+            "item_name", "item_photo_url", "reason", "refund_amount",
+            "status", "reviewed_by", "reviewed_by_name", "reviewed_at", "created_at",
+        )
+        read_only_fields = (
+            "employee", "refund_amount", "status", "reviewed_by", "reviewed_at", "created_at",
+        )
+
+    def get_item_name(self, obj):
+        if obj.purchased_item and obj.purchased_item.item:
+            return obj.purchased_item.item.name
+        return None
+
+    def get_item_photo_url(self, obj):
+        if obj.purchased_item and obj.purchased_item.item and obj.purchased_item.item.photo:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.purchased_item.item.photo.url)
+            return obj.purchased_item.item.photo.url
+        return None
+
+    def get_reviewed_by_name(self, obj):
+        if obj.reviewed_by:
+            emp = getattr(obj.reviewed_by, "employee_profile", None)
+            if emp:
+                return emp.full_name
+            return obj.reviewed_by.email
+        return None
+
+
+class CreateRefundRequestSerializer(serializers.Serializer):
+    purchased_item_id = serializers.IntegerField()
+    reason = serializers.CharField(required=False, default="")

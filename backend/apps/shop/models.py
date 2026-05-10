@@ -37,10 +37,10 @@ class ShopSettings(models.Model):
 
 class CoinBalance(models.Model):
     employee = models.OneToOneField(
-        "core.Employee", on_delete=CASCADE, related_name="coin_balance"
+        "core.Employee", verbose_name="Сотрудник", on_delete=CASCADE, related_name="coin_balance"
     )
     company = models.ForeignKey(
-        "core.Company", on_delete=CASCADE, related_name="coin_balances"
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="coin_balances"
     )
     balance = models.IntegerField("Баланс", default=0)
     updated_at = models.DateTimeField(auto_now=True)
@@ -61,10 +61,10 @@ class CoinTransaction(models.Model):
         REFUND = "refund", "Возврат"
 
     employee = models.ForeignKey(
-        "core.Employee", on_delete=CASCADE, related_name="coin_transactions"
+        "core.Employee", verbose_name="Сотрудник", on_delete=CASCADE, related_name="coin_transactions"
     )
     company = models.ForeignKey(
-        "core.Company", on_delete=CASCADE, related_name="coin_transactions"
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="coin_transactions"
     )
     amount = models.IntegerField("Сумма")
     transaction_type = models.CharField(
@@ -72,10 +72,10 @@ class CoinTransaction(models.Model):
     )
     comment = models.TextField("Комментарий", blank=True, default="")
     created_by = models.ForeignKey(
-        "core.CustomUser", on_delete=SET_NULL, null=True, blank=True, related_name="+"
+        "core.CustomUser", verbose_name="Создал", on_delete=SET_NULL, null=True, blank=True, related_name="+"
     )
     related_order = models.ForeignKey(
-        "shop.Order", on_delete=SET_NULL, null=True, blank=True, related_name="transactions"
+        "shop.Order", verbose_name="Связанный заказ", on_delete=SET_NULL, null=True, blank=True, related_name="transactions"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -92,10 +92,10 @@ class CoinTransaction(models.Model):
 
 class ShopCategory(models.Model):
     company = models.ForeignKey(
-        "core.Company", on_delete=CASCADE, related_name="shop_categories"
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="shop_categories"
     )
     unit = models.ForeignKey(
-        "core.Unit", on_delete=CASCADE, related_name="shop_categories"
+        "core.Unit", verbose_name="Юнит", on_delete=CASCADE, related_name="shop_categories"
     )
     name = models.CharField("Название", max_length=200)
     order = models.PositiveIntegerField("Порядок", default=0)
@@ -114,13 +114,13 @@ class ShopCategory(models.Model):
 
 class ShopItem(models.Model):
     company = models.ForeignKey(
-        "core.Company", on_delete=CASCADE, related_name="shop_items"
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="shop_items"
     )
     unit = models.ForeignKey(
-        "core.Unit", on_delete=CASCADE, related_name="shop_items"
+        "core.Unit", verbose_name="Юнит", on_delete=CASCADE, related_name="shop_items"
     )
     category = models.ForeignKey(
-        ShopCategory, on_delete=SET_NULL, null=True, blank=True, related_name="items"
+        ShopCategory, verbose_name="Категория", on_delete=SET_NULL, null=True, blank=True, related_name="items"
     )
     name = models.CharField("Название", max_length=300, db_index=True)
     description = models.TextField("Описание", blank=True, default="")
@@ -135,10 +135,10 @@ class ShopItem(models.Model):
     )
     is_active = models.BooleanField("Активен", default=True)
     created_by = models.ForeignKey(
-        "core.CustomUser", on_delete=SET_NULL, null=True, blank=True, related_name="+"
+        "core.CustomUser", verbose_name="Создал", on_delete=SET_NULL, null=True, blank=True, related_name="+"
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
+    updated_at = models.DateTimeField("Обновлено", auto_now=True)
 
     class Meta:
         db_table = "shop_items"
@@ -160,13 +160,13 @@ class Order(models.Model):
         REJECTED = "rejected", "Отклонён"
 
     employee = models.ForeignKey(
-        "core.Employee", on_delete=CASCADE, related_name="shop_orders"
+        "core.Employee", verbose_name="Сотрудник", on_delete=CASCADE, related_name="shop_orders"
     )
     company = models.ForeignKey(
-        "core.Company", on_delete=CASCADE, related_name="shop_orders"
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="shop_orders"
     )
     item = models.ForeignKey(
-        ShopItem, on_delete=SET_NULL, null=True, related_name="orders"
+        ShopItem, verbose_name="Товар", on_delete=SET_NULL, null=True, related_name="orders"
     )
     quantity = models.PositiveIntegerField("Количество", default=1)
     total_price = models.PositiveIntegerField("Итого (СК коины)")
@@ -174,10 +174,10 @@ class Order(models.Model):
         "Статус", max_length=20, choices=Status.choices, default=Status.PENDING
     )
     reviewed_by = models.ForeignKey(
-        "core.CustomUser", on_delete=SET_NULL, null=True, blank=True, related_name="+"
+        "core.CustomUser", verbose_name="Рассмотрел", on_delete=SET_NULL, null=True, blank=True, related_name="+"
     )
     reviewed_at = models.DateTimeField("Дата рассмотрения", null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
 
     class Meta:
         db_table = "shop_orders"
@@ -192,16 +192,16 @@ class Order(models.Model):
 
 class PurchasedItem(models.Model):
     employee = models.ForeignKey(
-        "core.Employee", on_delete=CASCADE, related_name="purchased_items"
+        "core.Employee", verbose_name="Сотрудник", on_delete=CASCADE, related_name="purchased_items"
     )
     company = models.ForeignKey(
-        "core.Company", on_delete=CASCADE, related_name="purchased_items"
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="purchased_items"
     )
     order = models.ForeignKey(
-        Order, on_delete=CASCADE, related_name="purchased_items"
+        Order, verbose_name="Заказ", on_delete=CASCADE, related_name="purchased_items"
     )
     item = models.ForeignKey(
-        ShopItem, on_delete=SET_NULL, null=True, related_name="purchased_items"
+        ShopItem, verbose_name="Товар", on_delete=SET_NULL, null=True, related_name="purchased_items"
     )
     quantity_remaining = models.PositiveIntegerField("Осталось активаций")
     is_fully_activated = models.BooleanField("Полностью активирован", default=False)
@@ -220,12 +220,12 @@ class PurchasedItem(models.Model):
 
 class ItemActivation(models.Model):
     purchased_item = models.ForeignKey(
-        PurchasedItem, on_delete=CASCADE, related_name="activations"
+        PurchasedItem, verbose_name="Купленный товар", on_delete=CASCADE, related_name="activations"
     )
     employee = models.ForeignKey(
-        "core.Employee", on_delete=CASCADE, related_name="item_activations"
+        "core.Employee", verbose_name="Сотрудник", on_delete=CASCADE, related_name="item_activations"
     )
-    activated_at = models.DateTimeField(auto_now_add=True)
+    activated_at = models.DateTimeField("Дата активации", auto_now_add=True)
 
     class Meta:
         db_table = "shop_item_activations"
@@ -237,13 +237,50 @@ class ItemActivation(models.Model):
         return f"{self.employee} — {self.purchased_item} ({self.activated_at})"
 
 
+class RefundRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Ожидает подтверждения"
+        APPROVED = "approved", "Одобрен"
+        REJECTED = "rejected", "Отклонён"
+
+    purchased_item = models.ForeignKey(
+        PurchasedItem, verbose_name="Купленный товар", on_delete=CASCADE, related_name="refund_requests"
+    )
+    employee = models.ForeignKey(
+        "core.Employee", verbose_name="Сотрудник", on_delete=CASCADE, related_name="refund_requests"
+    )
+    company = models.ForeignKey(
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="refund_requests"
+    )
+    reason = models.TextField("Причина возврата", blank=True, default="")
+    refund_amount = models.PositiveIntegerField("Сумма возврата")
+    status = models.CharField(
+        "Статус", max_length=20, choices=Status.choices, default=Status.PENDING
+    )
+    reviewed_by = models.ForeignKey(
+        "core.CustomUser", verbose_name="Рассмотрел", on_delete=SET_NULL, null=True, blank=True, related_name="+"
+    )
+    reviewed_at = models.DateTimeField("Дата рассмотрения", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "shop_refund_requests"
+        ordering = ["-created_at"]
+        verbose_name = "Запрос на возврат"
+        verbose_name_plural = "Запросы на возврат"
+
+    def __str__(self):
+        item_name = self.purchased_item.item.name if self.purchased_item.item else "удалён"
+        return f"{self.employee} — {item_name} ({self.get_status_display()})"
+
+
 class AutoAccrualRule(models.Model):
     class TriggerType(models.TextChoices):
         QUIZ_COMPLETE = "quiz_complete", "Прохождение квиза"
         CUSTOM = "custom", "Произвольное"
 
     company = models.ForeignKey(
-        "core.Company", on_delete=CASCADE, related_name="auto_accrual_rules"
+        "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="auto_accrual_rules"
     )
     trigger_type = models.CharField(
         "Тип триггера", max_length=30, choices=TriggerType.choices
