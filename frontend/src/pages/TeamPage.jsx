@@ -73,16 +73,28 @@ export default function TeamPage() {
         [departments, selectedUnit],
     );
 
+    const unassignedEmployees = useMemo(() => {
+        let list = employees.filter((e) => !e.assignments || e.assignments.length === 0);
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            list = list.filter((e) =>
+                (e.full_name || "").toLowerCase().includes(q) ||
+                (e.email || "").toLowerCase().includes(q),
+            );
+        }
+        return list;
+    }, [employees, searchQuery]);
+
     const filteredEmployees = useMemo(() => {
-        let list = employees;
+        let list = employees.filter((e) => e.assignments && e.assignments.length > 0);
         if (selectedUnit) {
-            list = list.filter((e) => e.assignments?.some((a) => String(a.unit) === selectedUnit));
+            list = list.filter((e) => e.assignments.some((a) => String(a.unit) === selectedUnit));
         }
         if (selectedDept) {
-            list = list.filter((e) => e.assignments?.some((a) => String(a.department) === selectedDept));
+            list = list.filter((e) => e.assignments.some((a) => String(a.department) === selectedDept));
         }
         if (selectedRole) {
-            list = list.filter((e) => e.assignments?.some((a) => String(a.org_role) === selectedRole));
+            list = list.filter((e) => e.assignments.some((a) => String(a.org_role) === selectedRole));
         }
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase();
@@ -327,10 +339,56 @@ export default function TeamPage() {
                         )}
                     </div>
                 ))}
-                {filteredEmployees.length === 0 && (
+                {filteredEmployees.length === 0 && unassignedEmployees.length === 0 && (
                     <div className="surface-empty">Нет сотрудников</div>
                 )}
+                {filteredEmployees.length === 0 && unassignedEmployees.length > 0 && (
+                    <div className="surface-empty">Нет сотрудников с назначениями</div>
+                )}
             </div>
+
+            {canManage && unassignedEmployees.length > 0 && (
+                <div className="mt-6">
+                    <h2 className="text-sm font-medium mb-2" style={{ color: "var(--n-muted)" }}>
+                        Без назначений
+                        <span className="ml-1.5 text-xs opacity-60">({unassignedEmployees.length})</span>
+                    </h2>
+                    <div className="space-y-1">
+                        {unassignedEmployees.map((emp) => (
+                            <div
+                                key={emp.id}
+                                className="surface-panel flex items-center justify-between"
+                                style={{ borderStyle: "dashed" }}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div
+                                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium shrink-0"
+                                        style={{ background: "var(--n-hover)", color: "var(--n-dim)", border: "1px dashed var(--n-border)" }}
+                                    >
+                                        {(emp.full_name || emp.email || "?")[0].toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium" style={{ color: "var(--n-fg)" }}>{emp.full_name}</p>
+                                        <p className="text-xs text-muted">
+                                            {emp.email}
+                                            {emp.grade != null && ` · грейд ${emp.grade}`}
+                                            {" · "}<span style={{ color: "var(--accent-warn, #e6a700)" }}>нет назначений</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <button onClick={() => openEdit(emp)} className="btn-save px-2.5 py-1 text-xs flex items-center gap-1">
+                                        <Pencil size={12} /> Назначить
+                                    </button>
+                                    <button onClick={() => handleDelete(emp.id)} className="btn-danger p-1">
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {canManage && filteredInvites.length > 0 && (
                 <div className="mt-6">
