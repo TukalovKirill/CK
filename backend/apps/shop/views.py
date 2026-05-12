@@ -162,26 +162,45 @@ class ShopItemViewSet(BroadcastMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def available(self, request):
         from django.db.models import Q
-        qs = self.get_queryset().filter(is_active=True)
-        qs = qs.exclude(stock_quantity=0)
 
-        emp = getattr(request.user, "employee_profile", None)
-        if emp and not _is_full_access(request.user):
+        company = request.user.company
+        unit_id = request.query_params.get("unit")
+
+        if _is_full_access(request.user):
+            qs = ShopItem.objects.filter(company=company, is_active=True)
+            if unit_id:
+                qs = qs.filter(unit_id=unit_id)
+        else:
+            emp = getattr(request.user, "employee_profile", None)
+            if not emp:
+                return Response([])
+
             from apps.core.models import EmployeeAssignment
-            emp_assignments = EmployeeAssignment.objects.filter(employee=emp)
-            q = Q()
-            for ea in emp_assignments:
-                q |= Q(assignments__unit=ea.unit, assignments__department__isnull=True, assignments__org_role__isnull=True)
-                if ea.department:
-                    q |= Q(assignments__unit=ea.unit, assignments__department=ea.department, assignments__org_role__isnull=True)
-                    if ea.org_role:
-                        q |= Q(assignments__unit=ea.unit, assignments__department=ea.department, assignments__org_role=ea.org_role)
-            has_any_assignments = ShopItemAssignment.objects.filter(
-                item__company=request.user.company,
-            ).exists()
-            if has_any_assignments:
-                qs = qs.filter(q).distinct()
+            assignments = EmployeeAssignment.objects.filter(employee=emp)
+            if unit_id:
+                assignments = assignments.filter(unit_id=unit_id)
 
+            user_unit_ids = set(assignments.values_list("unit_id", flat=True))
+            user_dept_ids = set(
+                assignments.exclude(department__isnull=True).values_list("department_id", flat=True)
+            )
+            user_role_ids = set(
+                assignments.exclude(org_role__isnull=True).values_list("org_role_id", flat=True)
+            )
+
+            has_any = ShopItemAssignment.objects.filter(item__company=company).exists()
+            qs = ShopItem.objects.filter(company=company, is_active=True)
+
+            if has_any:
+                qs = qs.filter(
+                    Q(assignments__unit_id__in=user_unit_ids, assignments__department__isnull=True, assignments__org_role__isnull=True)
+                    | Q(assignments__department_id__in=user_dept_ids, assignments__org_role__isnull=True)
+                    | Q(assignments__org_role_id__in=user_role_ids)
+                )
+            else:
+                qs = qs.filter(unit_id__in=user_unit_ids)
+
+        qs = qs.exclude(stock_quantity=0).distinct()
         serializer = ShopItemListSerializer(qs, many=True, context={"request": request})
         return Response(serializer.data)
 
