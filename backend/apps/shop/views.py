@@ -116,9 +116,6 @@ class ShopItemViewSet(BroadcastMixin, viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_permissions(self):
-        if self.action == "available":
-            from .permissions import ShopModuleEnabled
-            return [ShopModuleEnabled()]
         if self.action in ("list", "retrieve"):
             return [CanViewShop()]
         return [CanEditShop()]
@@ -162,11 +159,18 @@ class ShopItemViewSet(BroadcastMixin, viewsets.ModelViewSet):
             updated, old_stock, updated.stock_quantity, ip=ip,
         )
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def available(self, request):
+        import logging
+        logger = logging.getLogger(__name__)
+
         from django.db.models import Q
 
         company = request.user.company
+        if not company:
+            logger.warning("[shop.available] user %s has no company", request.user.pk)
+            return Response([])
+
         unit_id = request.query_params.get("unit")
 
         if _is_full_access(request.user):
@@ -176,9 +180,10 @@ class ShopItemViewSet(BroadcastMixin, viewsets.ModelViewSet):
         else:
             emp = getattr(request.user, "employee_profile", None)
             if not emp:
+                logger.warning("[shop.available] user %s has no employee_profile", request.user.pk)
                 return Response([])
 
-            from apps.core.models import EmployeeAssignment, OrgRole
+            from apps.core.models import EmployeeAssignment
 
             ea_qs = EmployeeAssignment.objects.filter(employee=emp).select_related("org_role")
             if unit_id:
@@ -196,19 +201,27 @@ class ShopItemViewSet(BroadcastMixin, viewsets.ModelViewSet):
                     if ea.org_role and ea.org_role.department_id:
                         user_dept_ids.add(ea.org_role.department_id)
 
+            logger.info(
+                "[shop.available] emp=%s units=%s depts=%s roles=%s",
+                emp.pk, user_unit_ids, user_dept_ids, user_role_ids,
+            )
+
             has_any = ShopItemAssignment.objects.filter(item__company=company).exists()
             qs = ShopItem.objects.filter(company=company, is_active=True)
 
             if has_any:
+                logger.info("[shop.available] filtering by assignments")
                 qs = qs.filter(
                     Q(assignments__unit_id__in=user_unit_ids, assignments__department__isnull=True, assignments__org_role__isnull=True)
                     | Q(assignments__department_id__in=user_dept_ids, assignments__org_role__isnull=True)
                     | Q(assignments__org_role_id__in=user_role_ids)
                 )
             else:
+                logger.info("[shop.available] no assignments exist, showing all for units")
                 qs = qs.filter(unit_id__in=user_unit_ids)
 
         qs = qs.exclude(stock_quantity=0).distinct()
+        logger.info("[shop.available] returning %d items", qs.count())
         serializer = ShopItemListSerializer(qs, many=True, context={"request": request})
         return Response(serializer.data)
 
