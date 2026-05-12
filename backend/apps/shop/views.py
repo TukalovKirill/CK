@@ -178,18 +178,23 @@ class ShopItemViewSet(BroadcastMixin, viewsets.ModelViewSet):
             if not emp:
                 return Response([])
 
-            from apps.core.models import EmployeeAssignment
-            assignments = EmployeeAssignment.objects.filter(employee=emp)
-            if unit_id:
-                assignments = assignments.filter(unit_id=unit_id)
+            from apps.core.models import EmployeeAssignment, OrgRole
 
-            user_unit_ids = set(assignments.values_list("unit_id", flat=True))
-            user_dept_ids = set(
-                assignments.exclude(department__isnull=True).values_list("department_id", flat=True)
-            )
-            user_role_ids = set(
-                assignments.exclude(org_role__isnull=True).values_list("org_role_id", flat=True)
-            )
+            ea_qs = EmployeeAssignment.objects.filter(employee=emp).select_related("org_role")
+            if unit_id:
+                ea_qs = ea_qs.filter(unit_id=unit_id)
+
+            user_unit_ids = set()
+            user_dept_ids = set()
+            user_role_ids = set()
+            for ea in ea_qs:
+                user_unit_ids.add(ea.unit_id)
+                if ea.department_id:
+                    user_dept_ids.add(ea.department_id)
+                if ea.org_role_id:
+                    user_role_ids.add(ea.org_role_id)
+                    if ea.org_role and ea.org_role.department_id:
+                        user_dept_ids.add(ea.org_role.department_id)
 
             has_any = ShopItemAssignment.objects.filter(item__company=company).exists()
             qs = ShopItem.objects.filter(company=company, is_active=True)
