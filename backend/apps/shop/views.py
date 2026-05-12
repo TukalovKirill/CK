@@ -116,7 +116,10 @@ class ShopItemViewSet(BroadcastMixin, viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_permissions(self):
-        if self.action in ("list", "retrieve", "available"):
+        if self.action == "available":
+            from .permissions import ShopModuleEnabled
+            return [ShopModuleEnabled()]
+        if self.action in ("list", "retrieve"):
             return [CanViewShop()]
         return [CanEditShop()]
 
