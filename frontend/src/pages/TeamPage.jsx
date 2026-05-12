@@ -157,6 +157,16 @@ export default function TeamPage() {
                     grade: form.grade,
                     birth_date: form.birth_date || null,
                 });
+                if (pendingAssign.unit && pendingAssign.org_role) {
+                    await bulkCreateAssignments({
+                        employee: editing,
+                        assignments: [{
+                            unit: Number(pendingAssign.unit),
+                            department: pendingAssign.department ? Number(pendingAssign.department) : null,
+                            org_role: Number(pendingAssign.org_role),
+                        }],
+                    });
+                }
                 toast.success("Сохранено");
             } else {
                 await axiosInstance.post("invites/", {

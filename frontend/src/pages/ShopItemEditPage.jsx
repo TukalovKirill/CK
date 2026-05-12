@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { getItem, createItem, updateItem } from "../api/shop";
-import { getCategories } from "../api/shop";
+import { useAuth, getUserUnitsForPermission } from "../context/AuthContext";
+import { getItem, createItem, updateItem, getCategories } from "../api/shop";
+import { getUnits } from "../api/org";
 import { Save, ArrowLeft, Upload } from "lucide-react";
 
 export default function ShopItemEditPage() {
@@ -31,15 +31,29 @@ export default function ShopItemEditPage() {
     loadUnits();
     loadCategories();
     if (isEdit) loadItem();
-  }, [id]);
+  }, [id, user]);
 
-  const loadUnits = () => {
-    const assignments = user?.assignments || [];
-    const unitList = assignments.map((a) => ({ id: a.unit_id || a.unit, name: a.unit_name }));
-    const unique = Array.from(new Map(unitList.map((u) => [u.id, u])).values());
-    setUnits(unique);
-    if (!isEdit && unique.length > 0 && !form.unit) {
-      setForm((f) => ({ ...f, unit: String(unique[0].id) }));
+  const loadUnits = async () => {
+    let unitList = [];
+    if (user?.permissions === null) {
+      try {
+        const res = await getUnits();
+        unitList = res.data.map((u) => ({ id: u.id, name: u.name }));
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      const editUnits = getUserUnitsForPermission(user, "shop.edit");
+      const assignments = user?.assignments || [];
+      const filtered = assignments.filter(
+        (a) => !editUnits || editUnits.includes(a.unit)
+      );
+      const mapped = filtered.map((a) => ({ id: a.unit, name: a.unit_name }));
+      unitList = Array.from(new Map(mapped.map((u) => [u.id, u])).values());
+    }
+    setUnits(unitList);
+    if (!isEdit && unitList.length > 0 && !form.unit) {
+      setForm((f) => ({ ...f, unit: String(unitList[0].id) }));
     }
   };
 
@@ -185,7 +199,7 @@ export default function ShopItemEditPage() {
             <label className="block text-sm font-medium mb-1.5">Юнит *</label>
             <select
               value={form.unit}
-              onChange={(e) => setForm({ ...form, unit: e.target.value })}
+              onChange={(e) => setForm({ ...form, unit: e.target.value, category: "" })}
               className="w-full px-4 py-2.5 rounded-lg border text-sm"
               style={{ background: "var(--n-bg)", borderColor: "var(--n-border)" }}
               required
