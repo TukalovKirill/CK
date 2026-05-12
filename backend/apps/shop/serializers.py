@@ -13,6 +13,7 @@ from .models import (
     RefundRequest,
     ShopCategory,
     ShopItem,
+    ShopItemAssignment,
     ShopSettings,
 )
 
@@ -291,3 +292,34 @@ class RefundRequestSerializer(serializers.ModelSerializer):
 class CreateRefundRequestSerializer(serializers.Serializer):
     purchased_item_id = serializers.IntegerField()
     reason = serializers.CharField(required=False, default="")
+
+
+# --- Item Assignments ---
+
+class ShopItemAssignmentSerializer(serializers.ModelSerializer):
+    item_name = serializers.CharField(source="item.name", read_only=True, default=None)
+    unit_name = serializers.CharField(source="unit.name", read_only=True, default=None)
+    department_name = serializers.SerializerMethodField()
+    org_role_title = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ShopItemAssignment
+        fields = (
+            "id", "item", "item_name", "unit", "unit_name",
+            "department", "department_name",
+            "org_role", "org_role_title",
+            "assigned_at",
+        )
+        read_only_fields = ("assigned_at",)
+
+    def get_department_name(self, obj):
+        return obj.department.name if obj.department else None
+
+    def get_org_role_title(self, obj):
+        return obj.org_role.title if obj.org_role else None
+
+
+class ShopItemAssignmentWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShopItemAssignment
+        fields = ("item", "unit", "department", "org_role")

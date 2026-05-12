@@ -297,3 +297,40 @@ class AutoAccrualRule(models.Model):
 
     def __str__(self):
         return f"{self.get_trigger_type_display()} — {self.amount} СК"
+
+
+class ShopItemAssignment(models.Model):
+    item = models.ForeignKey(
+        ShopItem, verbose_name="Товар", on_delete=CASCADE, related_name="assignments"
+    )
+    unit = models.ForeignKey(
+        "core.Unit", verbose_name="Юнит", on_delete=CASCADE, related_name="shop_item_assignments"
+    )
+    department = models.ForeignKey(
+        "core.Department", verbose_name="Департамент", on_delete=CASCADE,
+        null=True, blank=True,
+    )
+    org_role = models.ForeignKey(
+        "core.OrgRole", verbose_name="Должность", on_delete=CASCADE,
+        null=True, blank=True,
+    )
+    assigned_by = models.ForeignKey(
+        "core.CustomUser", verbose_name="Назначил", on_delete=SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
+    assigned_at = models.DateTimeField("Дата назначения", auto_now_add=True)
+
+    class Meta:
+        db_table = "shop_item_assignments"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["item", "unit", "department", "org_role"],
+                name="unique_shop_item_assignment",
+                nulls_distinct=False,
+            ),
+        ]
+        verbose_name = "Назначение товара"
+        verbose_name_plural = "Назначения товаров"
+
+    def __str__(self):
+        return f"{self.item.name} → {self.unit.name}"

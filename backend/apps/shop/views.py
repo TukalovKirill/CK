@@ -23,6 +23,7 @@ from .models import (
     RefundRequest,
     ShopCategory,
     ShopItem,
+    ShopItemAssignment,
     ShopSettings,
 )
 from .permissions import (
@@ -44,6 +45,8 @@ from .serializers import (
     RefundRequestSerializer,
     ShopCategorySerializer,
     ShopCategoryWriteSerializer,
+    ShopItemAssignmentSerializer,
+    ShopItemAssignmentWriteSerializer,
     ShopItemDetailSerializer,
     ShopItemListSerializer,
     ShopItemWriteSerializer,
@@ -158,8 +161,27 @@ class ShopItemViewSet(BroadcastMixin, viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def available(self, request):
+        from django.db.models import Q
         qs = self.get_queryset().filter(is_active=True)
         qs = qs.exclude(stock_quantity=0)
+
+        emp = getattr(request.user, "employee_profile", None)
+        if emp and not _is_full_access(request.user):
+            from apps.core.models import EmployeeAssignment
+            emp_assignments = EmployeeAssignment.objects.filter(employee=emp)
+            q = Q()
+            for ea in emp_assignments:
+                q |= Q(assignments__unit=ea.unit, assignments__department__isnull=True, assignments__org_role__isnull=True)
+                if ea.department:
+                    q |= Q(assignments__unit=ea.unit, assignments__department=ea.department, assignments__org_role__isnull=True)
+                    if ea.org_role:
+                        q |= Q(assignments__unit=ea.unit, assignments__department=ea.department, assignments__org_role=ea.org_role)
+            has_any_assignments = ShopItemAssignment.objects.filter(
+                item__company=request.user.company,
+            ).exists()
+            if has_any_assignments:
+                qs = qs.filter(q).distinct()
+
         serializer = ShopItemListSerializer(qs, many=True, context={"request": request})
         return Response(serializer.data)
 
@@ -811,3 +833,47 @@ class RefundRequestViewSet(BroadcastMixin, viewsets.ModelViewSet):
         })
 
         return Response(RefundRequestSerializer(refund_req, context={"request": request}).data)
+
+
+# --- Item Assignments ---
+
+class ShopItemAssignmentViewSet(BroadcastMixin, viewsets.ModelViewSet):
+    broadcast_entity = "shop_item"
+    http_method_names = ["get", "post", "delete"]
+    permission_classes = [CanEditShop]
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return ShopItemAssignmentWriteSerializer
+        return ShopItemAssignmentSerializer
+
+    def get_queryset(self):
+        qs = ShopItemAssignment.objects.filter(
+            item__company=self.request.user.company,
+        ).select_related("item", "unit", "department", "org_role")
+        unit_id = self.request.query_params.get("unit")
+        if unit_id:
+            qs = qs.filter(unit_id=unit_id)
+        item_id = self.request.query_params.get("item")
+        if item_id:
+            qs = qs.filter(item_id=item_id)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(assigned_by=self.request.user)
+
+    @action(detail=False, methods=["post"], url_path="bulk-delete")
+    def bulk_delete(self, request):
+        unit_id = request.data.get("unit")
+        department_id = request.data.get("department")
+        if not unit_id:
+            return Response({"detail": "unit обязателен"}, status=400)
+        qs = ShopItemAssignment.objects.filter(
+            item__company=request.user.company, unit_id=unit_id,
+        )
+        if department_id:
+            qs = qs.filter(department_id=department_id)
+        count = qs.count()
+        qs.delete()
+        self._broadcast("deleted")
+        return Response({"deleted": count})

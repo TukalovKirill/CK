@@ -66,3 +66,9 @@ export const getRefunds = (params) => axiosInstance.get(`${BASE}refunds/`, { par
 export const createRefund = (data) => axiosInstance.post(`${BASE}refunds/`, data);
 export const approveRefund = (id) => axiosInstance.post(`${BASE}refunds/${id}/approve/`);
 export const rejectRefund = (id) => axiosInstance.post(`${BASE}refunds/${id}/reject/`);
+
+// Assignments
+export const getAssignments = (params) => axiosInstance.get(`${BASE}assignments/`, { params });
+export const createAssignment = (data) => axiosInstance.post(`${BASE}assignments/`, data);
+export const deleteAssignment = (id) => axiosInstance.delete(`${BASE}assignments/${id}/`);
+export const bulkDeleteAssignments = (data) => axiosInstance.post(`${BASE}assignments/bulk-delete/`, data);

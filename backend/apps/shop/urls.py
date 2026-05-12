@@ -10,6 +10,7 @@ from .views import (
     PurchasedItemViewSet,
     RefundRequestViewSet,
     ShopCategoryViewSet,
+    ShopItemAssignmentViewSet,
     ShopItemViewSet,
     ShopSettingsView,
 )
@@ -21,6 +22,7 @@ router.register("transactions", CoinTransactionViewSet, basename="coin-transacti
 router.register("orders", OrderViewSet, basename="shop-order")
 router.register("my-items", PurchasedItemViewSet, basename="purchased-item")
 router.register("refunds", RefundRequestViewSet, basename="refund-request")
+router.register("assignments", ShopItemAssignmentViewSet, basename="shop-item-assignment")
 
 urlpatterns = [
     path("settings/", ShopSettingsView.as_view()),
