@@ -193,6 +193,14 @@ class OrgPermissionListSerializer(serializers.ModelSerializer):
     domain = serializers.SerializerMethodField()
     domain_label = serializers.SerializerMethodField()
 
+    DOMAIN_LABELS = {
+        "org": "Структура компании",
+        "team": "Команда",
+        "textbooks": "Учебники",
+        "quizzes": "Тестирование",
+        "shop": "Магазин",
+    }
+
     class Meta:
         model = OrgPermission
         fields = ("id", "code", "name", "description", "domain", "domain_label")
@@ -202,7 +210,7 @@ class OrgPermissionListSerializer(serializers.ModelSerializer):
 
     def get_domain_label(self, obj):
         domain = obj.code.split(".")[0] if "." in obj.code else obj.code
-        return domain
+        return self.DOMAIN_LABELS.get(domain, domain)
 
 
 # --- OrgRole ---

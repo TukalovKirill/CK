@@ -196,12 +196,14 @@ export default function CompanySettingsPage() {
 
   const permDomains = useMemo(() => {
     const map = {};
+    const labels = {};
     allPerms.forEach((p) => {
-      const d = p.code.split(".")[0];
+      const d = p.domain || p.code.split(".")[0];
       if (!map[d]) map[d] = [];
       map[d].push(p);
+      if (p.domain_label) labels[d] = p.domain_label;
     });
-    return map;
+    return { groups: map, labels };
   }, [allPerms]);
 
   if (loading) return <div className="surface-empty">Загрузка...</div>;
@@ -471,7 +473,7 @@ export default function CompanySettingsPage() {
               {!editingRole?.is_system && user?.can_manage_permissions && (
                 <div className="space-y-2">
                   <div className="section-title">ПРАВА ДОСТУПА</div>
-                  {Object.entries(permDomains).map(([domain, perms]) => {
+                  {Object.entries(permDomains.groups).map(([domain, perms]) => {
                     const domainOpen = openDomains.has(domain);
                     const selected = perms.filter((p) => selectedPerms.has(p.id)).length;
                     return (
@@ -481,7 +483,7 @@ export default function CompanySettingsPage() {
                           className="w-full flex items-center justify-between text-sm"
                           style={{ color: "var(--n-fg)" }}
                         >
-                          <span className="font-medium capitalize">{domain}</span>
+                          <span className="font-medium">{permDomains.labels[domain] || domain}</span>
                           <span className="flex items-center gap-2">
                             <span className="badge-muted text-xs">{selected}/{perms.length}</span>
                             <ChevronDown size={14} style={{ transform: domainOpen ? "rotate(0)" : "rotate(-90deg)", transition: "transform 200ms" }} />
@@ -490,14 +492,17 @@ export default function CompanySettingsPage() {
                         {domainOpen && (
                           <div className="mt-2 space-y-1">
                             {perms.map((p) => (
-                              <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer py-0.5" style={{ color: "var(--n-fg)" }}>
+                              <label key={p.id} className="flex items-start gap-2 text-sm cursor-pointer py-1" style={{ color: "var(--n-fg)" }}>
                                 <input
                                   type="checkbox"
                                   checked={selectedPerms.has(p.id)}
                                   onChange={() => setSelectedPerms((s) => { const n = new Set(s); n.has(p.id) ? n.delete(p.id) : n.add(p.id); return n; })}
-                                  className="check-premium"
+                                  className="check-premium mt-0.5"
                                 />
-                                {p.name}
+                                <div>
+                                  <div>{p.name}</div>
+                                  {p.description && <div className="text-xs mt-0.5" style={{ color: "var(--n-fg-muted)", opacity: 0.7 }}>{p.description}</div>}
+                                </div>
                               </label>
                             ))}
                           </div>
