@@ -19,6 +19,9 @@ echo "Database ready."
 echo "Running migrations..."
 python manage.py migrate --noinput
 
+echo "Seeding permissions..."
+python manage.py seed_permissions
+
 echo "Collecting static files..."
 python manage.py collectstatic --noinput 2>/dev/null || true
 
