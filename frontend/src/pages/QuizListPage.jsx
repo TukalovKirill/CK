@@ -156,10 +156,7 @@ function TestCard({ item }) {
 
 export default function QuizListPage() {
   const { user } = useAuth();
-  const isFullAccess = user?.is_superuser
-    || user?.role === "owner"
-    || user?.org_role_code === "owner"
-    || user?.org_role_code === "developer";
+  const isFullAccess = user?.permissions === null;
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

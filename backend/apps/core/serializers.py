@@ -49,6 +49,7 @@ class UserSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
     unit_permissions = serializers.SerializerMethodField()
     can_manage_permissions = serializers.SerializerMethodField()
+    is_admin_role = serializers.SerializerMethodField()
     birth_date = serializers.SerializerMethodField()
     assignments = serializers.SerializerMethodField()
     coin_balance = serializers.SerializerMethodField()
@@ -58,7 +59,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             "id", "email", "role", "company", "is_superuser",
             "employee_id", "org_role_id", "org_role_code", "org_role_title",
-            "permissions", "unit_permissions", "can_manage_permissions",
+            "permissions", "unit_permissions", "can_manage_permissions", "is_admin_role",
             "birth_date", "assignments", "coin_balance",
         )
 
@@ -111,6 +112,19 @@ class UserSerializer(serializers.ModelSerializer):
         from .permissions import _user_can_manage_permissions
 
         return _user_can_manage_permissions(obj)
+
+    def get_is_admin_role(self, obj):
+        from .permissions import _is_full_access
+
+        if _is_full_access(obj):
+            return True
+        emp = getattr(obj, "employee_profile", None)
+        if not emp:
+            return False
+        for a in emp.assignments.select_related("org_role").all():
+            if a.org_role.is_admin_role:
+                return True
+        return False
 
     def get_birth_date(self, obj):
         emp = getattr(obj, "employee_profile", None)
@@ -237,7 +251,7 @@ class OrgRoleSerializer(serializers.ModelSerializer):
             "code", "title", "group", "level",
             "parent_role", "parent_role_title", "child_roles",
             "is_assignable", "is_system",
-            "permissions", "can_manage_permissions",
+            "permissions", "can_manage_permissions", "is_admin_role",
         )
         read_only_fields = ("company", "level", "code", "is_system")
 
@@ -259,7 +273,7 @@ class OrgRoleCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrgRole
-        fields = ("id", "title", "group", "department", "parent_role", "permissions")
+        fields = ("id", "title", "group", "department", "parent_role", "permissions", "is_admin_role")
 
     def get_fields(self):
         fields = super().get_fields()

@@ -155,7 +155,7 @@ class MeViewSet(viewsets.ViewSet):
 
 class CompanyViewSet(viewsets.ModelViewSet):
     serializer_class = CompanySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [require_read_write("org.view", "org.manage")]
     pagination_class = None
 
     def get_queryset(self):

@@ -17,6 +17,7 @@ def create_system_roles(sender, instance, created, **kwargs):
         title="Разработчик",
         is_system=True,
         is_assignable=False,
+        is_admin_role=True,
         level=0,
     )
     developer_role.permissions.set(all_perms)
@@ -28,6 +29,7 @@ def create_system_roles(sender, instance, created, **kwargs):
         parent_role=developer_role,
         is_system=True,
         is_assignable=False,
+        is_admin_role=True,
         level=1,
     )
     owner_role.permissions.set(all_perms)

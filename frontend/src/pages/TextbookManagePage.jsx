@@ -84,7 +84,7 @@ function InlineChip({ item, selected, onSelect, onRename, onDelete }) {
 export default function TextbookManagePage() {
     const { user } = useAuth();
     const canAssign = hasPermission(user, "textbooks.manage_assignments");
-    const isSuperuser = user?.is_superuser;
+    const isFullAccess = user?.permissions === null;
     const dialog = useDialog();
 
     const [sections, setSections] = useState([]);
@@ -244,7 +244,7 @@ export default function TextbookManagePage() {
             </div>
 
             {/* All companies checkbox */}
-            {isSuperuser && (
+            {isFullAccess && (
                 <label className="check-premium flex items-center gap-2 text-sm cursor-pointer w-fit">
                     <input
                         type="checkbox"

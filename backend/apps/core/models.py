@@ -143,6 +143,7 @@ class OrgRole(models.Model):
     )
     permissions = models.ManyToManyField(OrgPermission, verbose_name="Разрешения", blank=True, related_name="roles")
     can_manage_permissions = models.BooleanField("Может управлять правами", default=False)
+    is_admin_role = models.BooleanField("Административный функционал", default=False)
     group = models.CharField("Группа", max_length=255, blank=True, default="")
     is_assignable = models.BooleanField("Назначаема через UI", default=True)
     is_system = models.BooleanField("Системная роль", default=False)

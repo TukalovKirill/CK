@@ -17,6 +17,8 @@ import {
 export default function CompanySettingsPage() {
   const { user } = useAuth();
   const dialog = useDialog();
+  const canManage = hasPermission(user, "org.manage");
+  const canManageRoles = hasPermission(user, "org.roles_manage");
 
   const [units, setUnits] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -42,7 +44,7 @@ export default function CompanySettingsPage() {
   const [selectedPerms, setSelectedPerms] = useState(new Set());
   const [openDomains, setOpenDomains] = useState(new Set());
   const [roleForm, setRoleForm] = useState({
-    title: "", group: "", unit: "", department: "", parent_role: "", can_manage_permissions: false,
+    title: "", group: "", unit: "", department: "", parent_role: "", can_manage_permissions: false, is_admin_role: false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -140,6 +142,7 @@ export default function CompanySettingsPage() {
       department: role?.department || "",
       parent_role: role?.parent_role || "",
       can_manage_permissions: role?.can_manage_permissions || false,
+      is_admin_role: role?.is_admin_role || false,
     });
     setSidebarOpen(true);
     try {
@@ -165,6 +168,7 @@ export default function CompanySettingsPage() {
         parent_role: roleForm.parent_role || null,
         permissions: [...selectedPerms],
         can_manage_permissions: roleForm.can_manage_permissions,
+        is_admin_role: roleForm.is_admin_role,
       };
       if (editingRole) {
         await updateOrgRole(editingRole.id, payload);
@@ -220,7 +224,7 @@ export default function CompanySettingsPage() {
           <div className="flex flex-wrap gap-2">
             {units.map((u) => (
               <div key={u.id} className="group relative">
-                {editingUnitId === u.id ? (
+                {canManage && editingUnitId === u.id ? (
                   <span className="inline-flex items-center gap-1">
                     <input
                       autoFocus
@@ -236,22 +240,25 @@ export default function CompanySettingsPage() {
                   </span>
                 ) : (
                   <button
-                    onClick={() => { setEditingUnitId(u.id); setEditingUnitName(u.name); }}
+                    onClick={canManage ? () => { setEditingUnitId(u.id); setEditingUnitName(u.name); } : undefined}
                     className="badge-bronze flex items-center gap-1.5 py-1 px-3"
+                    style={canManage ? {} : { cursor: "default" }}
                   >
                     {u.name}
-                    <span
-                      role="button"
-                      onClick={(e) => { e.stopPropagation(); handleDeleteUnit(u.id); }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={12} />
-                    </span>
+                    {canManage && (
+                      <span
+                        role="button"
+                        onClick={(e) => { e.stopPropagation(); handleDeleteUnit(u.id); }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={12} />
+                      </span>
+                    )}
                   </button>
                 )}
               </div>
             ))}
-            {showUnitInput ? (
+            {canManage && (showUnitInput ? (
               <span className="inline-flex items-center gap-1">
                 <input
                   autoFocus
@@ -270,7 +277,7 @@ export default function CompanySettingsPage() {
               <button onClick={() => setShowUnitInput(true)} className="badge-muted" style={{ borderStyle: "dashed" }}>
                 <Plus size={14} />
               </button>
-            )}
+            ))}
           </div>
         </div>
       </section>
@@ -293,7 +300,7 @@ export default function CompanySettingsPage() {
                   <div className="flex flex-wrap gap-2">
                     {uDepts.map((d) => (
                       <div key={d.id} className="group relative">
-                        {editingDeptId === d.id ? (
+                        {canManage && editingDeptId === d.id ? (
                           <span className="inline-flex items-center gap-1">
                             <input
                               autoFocus
@@ -309,22 +316,25 @@ export default function CompanySettingsPage() {
                           </span>
                         ) : (
                           <button
-                            onClick={() => { setEditingDeptId(d.id); setEditingDeptName(d.name); }}
+                            onClick={canManage ? () => { setEditingDeptId(d.id); setEditingDeptName(d.name); } : undefined}
                             className="badge-muted flex items-center gap-1.5 py-1 px-3"
+                            style={canManage ? {} : { cursor: "default" }}
                           >
                             {d.name}
-                            <span
-                              role="button"
-                              onClick={(e) => { e.stopPropagation(); handleDeleteDept(d.id); }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X size={12} />
-                            </span>
+                            {canManage && (
+                              <span
+                                role="button"
+                                onClick={(e) => { e.stopPropagation(); handleDeleteDept(d.id); }}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={12} />
+                              </span>
+                            )}
                           </button>
                         )}
                       </div>
                     ))}
-                    {newDeptUnit === u.id ? (
+                    {canManage && (newDeptUnit === u.id ? (
                       <span className="inline-flex items-center gap-1">
                         <input
                           autoFocus
@@ -343,7 +353,7 @@ export default function CompanySettingsPage() {
                       <button onClick={() => setNewDeptUnit(u.id)} className="badge-muted" style={{ borderStyle: "dashed" }}>
                         <Plus size={14} />
                       </button>
-                    )}
+                    ))}
                   </div>
                 </div>
               );
@@ -356,9 +366,11 @@ export default function CompanySettingsPage() {
       <section>
         <div className="flex items-center justify-between">
           <div className="section-title">ИЕРАРХИЯ РОЛЕЙ</div>
-          <button className="btn-save text-xs" onClick={() => openRoleSidebar(null)}>
-            <Plus size={14} /> Роль
-          </button>
+          {canManageRoles && (
+            <button className="btn-save text-xs" onClick={() => openRoleSidebar(null)}>
+              <Plus size={14} /> Роль
+            </button>
+          )}
         </div>
         <div className="surface-panel space-y-1">
           {roles.length === 0 ? (
@@ -367,9 +379,9 @@ export default function CompanySettingsPage() {
             roles.map((r) => (
               <div
                 key={r.id}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors"
-                style={{ paddingLeft: `${(r.level || 0) * 1.5 + 0.5}rem` }}
-                onClick={() => openRoleSidebar(r)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors"
+                style={{ paddingLeft: `${(r.level || 0) * 1.5 + 0.5}rem`, cursor: canManageRoles ? "pointer" : "default" }}
+                onClick={canManageRoles ? () => openRoleSidebar(r) : undefined}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "var(--n-hover)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}
               >
@@ -467,6 +479,23 @@ export default function CompanySettingsPage() {
                     Управление правами
                   </label>
                 )}
+
+                {user?.can_manage_permissions && (
+                  <div>
+                    <label className="flex items-center gap-2 text-sm" style={{ color: "var(--n-fg)" }}>
+                      <input
+                        type="checkbox"
+                        checked={roleForm.is_admin_role}
+                        onChange={(e) => setRoleForm({ ...roleForm, is_admin_role: e.target.checked })}
+                        className="check-premium"
+                      />
+                      Административный функционал
+                    </label>
+                    <p className="text-xs mt-1 ml-6" style={{ color: "var(--n-dim)" }}>
+                      Открывает расширенную структуру страниц и дополнительные возможности управления в системе
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* PERMISSIONS */}
@@ -524,7 +553,7 @@ export default function CompanySettingsPage() {
               )}
             </div>
 
-            {!editingRole?.is_system && (
+            {!editingRole?.is_system && canManageRoles && (
               <div className="p-6 flex items-center gap-2" style={{ borderTop: "1px solid var(--n-border)" }}>
                 <button className="btn-save flex-1" onClick={handleSaveRole} disabled={saving}>
                   {saving ? "Сохранение..." : "Сохранить"}
