@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.db.models import Count, Q
 
 from .models import (
+    AuditLog,
     Company,
     CustomUser,
     Department,
@@ -351,3 +352,22 @@ class ZoneAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     list_select_related = ("company", "department", "org_role")
     raw_id_fields = ("company", "department", "org_role")
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ("timestamp", "user", "company", "action", "model_name", "object_repr", "ip_address")
+    list_filter = ("action", "model_name", "company")
+    search_fields = ("object_repr", "user__email", "model_name")
+    list_select_related = ("user", "company")
+    readonly_fields = ("timestamp", "user", "company", "action", "model_name", "object_id", "object_repr", "changes", "ip_address")
+    date_hierarchy = "timestamp"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser

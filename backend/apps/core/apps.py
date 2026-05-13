@@ -8,3 +8,5 @@ class CoreConfig(AppConfig):
 
     def ready(self):
         import apps.core.signals  # noqa: F401
+        from apps.core.audit import connect_audit_signals
+        connect_audit_signals()

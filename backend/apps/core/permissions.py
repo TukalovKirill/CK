@@ -8,6 +8,12 @@ from .models import EmployeeAssignment, OrgPermission, OrgRole
 def _is_full_access(user):
     if not user or not user.is_authenticated:
         return False
+    dev_role_id = getattr(user, "_dev_org_role_id", None)
+    if dev_role_id:
+        role = OrgRole.objects.filter(id=dev_role_id).first()
+        if role and role.is_system and role.code in ("developer", "owner"):
+            return True
+        return False
     if getattr(user, "is_superuser", False):
         return True
     if getattr(user, "role", None) == "owner":
@@ -25,6 +31,14 @@ def _is_full_access(user):
 def _get_user_permission_codes(user):
     if not user or not user.is_authenticated:
         return set()
+    dev_role_id = getattr(user, "_dev_org_role_id", None)
+    if dev_role_id:
+        role = OrgRole.objects.filter(id=dev_role_id).prefetch_related("permissions").first()
+        if not role:
+            return set()
+        if role.is_system and role.code in ("developer", "owner"):
+            return None
+        return set(role.permissions.values_list("code", flat=True))
     if getattr(user, "is_superuser", False):
         return None
     if getattr(user, "role", None) == "owner":
@@ -54,6 +68,10 @@ def has_org_permission(user, code):
 def _user_can_manage_permissions(user):
     if _is_full_access(user):
         return True
+    dev_role_id = getattr(user, "_dev_org_role_id", None)
+    if dev_role_id:
+        role = OrgRole.objects.filter(id=dev_role_id).first()
+        return role.can_manage_permissions if role else False
     emp = getattr(user, "employee_profile", None)
     if not emp:
         return False
@@ -66,6 +84,19 @@ def _user_can_manage_permissions(user):
 def get_user_unit_ids(user, permission_code):
     if _is_full_access(user):
         return None
+    dev_role_id = getattr(user, "_dev_org_role_id", None)
+    if dev_role_id:
+        codes = _get_user_permission_codes(user)
+        if codes is None:
+            return None
+        if permission_code not in codes:
+            return []
+        dev_unit_id = getattr(user, "_dev_unit_id", None)
+        if dev_unit_id:
+            return [dev_unit_id]
+        from .models import Unit
+        company_id = getattr(user, "_dev_company_id", None)
+        return list(Unit.objects.filter(company_id=company_id).values_list("id", flat=True))
     emp = getattr(user, "employee_profile", None)
     if emp is None:
         return []
@@ -83,6 +114,19 @@ def get_user_unit_ids(user, permission_code):
 def get_user_unit_permissions(user):
     if _is_full_access(user):
         return None
+    dev_role_id = getattr(user, "_dev_org_role_id", None)
+    if dev_role_id:
+        codes = _get_user_permission_codes(user)
+        if codes is None:
+            return None
+        perm_list = list(codes)
+        dev_unit_id = getattr(user, "_dev_unit_id", None)
+        if dev_unit_id:
+            return {dev_unit_id: perm_list}
+        from .models import Unit
+        company_id = getattr(user, "_dev_company_id", None)
+        unit_ids = Unit.objects.filter(company_id=company_id).values_list("id", flat=True)
+        return {uid: perm_list for uid in unit_ids}
     emp = getattr(user, "employee_profile", None)
     if emp is None:
         return {}

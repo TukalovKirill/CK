@@ -1,5 +1,6 @@
 import secrets
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -324,3 +325,51 @@ class InviteAssignment(models.Model):
             parts.append(str(self.department))
         parts.append(str(self.org_role))
         return " → ".join(parts)
+
+
+class AuditLog(models.Model):
+    ACTION_CHOICES = (
+        ("create", "Создание"),
+        ("update", "Обновление"),
+        ("delete", "Удаление"),
+        ("login", "Вход"),
+        ("login_fail", "Неудачный вход"),
+        ("request", "Запрос"),
+    )
+
+    timestamp = models.DateTimeField("Время", auto_now_add=True, db_index=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Пользователь",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    company = models.ForeignKey(
+        Company,
+        verbose_name="Компания",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    action = models.CharField("Действие", max_length=10, choices=ACTION_CHOICES)
+    model_name = models.CharField("Модель", max_length=100, db_index=True)
+    object_id = models.CharField("ID объекта", max_length=255, blank=True, default="")
+    object_repr = models.CharField("Представление", max_length=255, blank=True, default="")
+    changes = models.JSONField("Изменения", default=dict)
+    ip_address = models.GenericIPAddressField("IP-адрес", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Запись аудита"
+        verbose_name_plural = "Записи аудита"
+        ordering = ["-timestamp"]
+        indexes = [
+            models.Index(fields=["company", "-timestamp"], name="audit_company_ts_idx"),
+            models.Index(fields=["user", "-timestamp"], name="audit_user_ts_idx"),
+            models.Index(fields=["model_name", "-timestamp"], name="audit_model_ts_idx"),
+        ]
+
+    def __str__(self):
+        return f"[{self.timestamp}] {self.action} {self.model_name} ({self.object_repr})"
