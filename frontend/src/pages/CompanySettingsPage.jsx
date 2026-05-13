@@ -11,7 +11,7 @@ import Dropdown from "../components/Dropdown";
 import useRealtimeUpdates from "../hooks/useRealtimeUpdates";
 import toast from "react-hot-toast";
 import {
-  Plus, X, ChevronDown, Shield,
+  Plus, X, ChevronDown, Shield, Info,
 } from "lucide-react";
 
 export default function CompanySettingsPage() {
@@ -492,18 +492,28 @@ export default function CompanySettingsPage() {
                         {domainOpen && (
                           <div className="mt-2 space-y-1">
                             {perms.map((p) => (
-                              <label key={p.id} className="flex items-start gap-2 text-sm cursor-pointer py-1" style={{ color: "var(--n-fg)" }}>
-                                <input
-                                  type="checkbox"
-                                  checked={selectedPerms.has(p.id)}
-                                  onChange={() => setSelectedPerms((s) => { const n = new Set(s); n.has(p.id) ? n.delete(p.id) : n.add(p.id); return n; })}
-                                  className="check-premium mt-0.5"
-                                />
-                                <div>
-                                  <div>{p.name}</div>
-                                  {p.description && <div className="text-xs mt-0.5" style={{ color: "var(--n-fg-muted)", opacity: 0.7 }}>{p.description}</div>}
-                                </div>
-                              </label>
+                              <div key={p.id} className="flex items-center gap-2 text-sm py-0.5" style={{ color: "var(--n-fg)" }}>
+                                <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedPerms.has(p.id)}
+                                    onChange={() => setSelectedPerms((s) => { const n = new Set(s); n.has(p.id) ? n.delete(p.id) : n.add(p.id); return n; })}
+                                    className="check-premium"
+                                  />
+                                  <span className="truncate">{p.name}</span>
+                                </label>
+                                {p.description && (
+                                  <button
+                                    type="button"
+                                    onClick={() => dialog.alert(p.name, p.description)}
+                                    className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full transition-colors duration-150"
+                                    style={{ color: "var(--n-muted)" }}
+                                    title="Подробнее"
+                                  >
+                                    <Info size={15} strokeWidth={1.8} />
+                                  </button>
+                                )}
+                              </div>
                             ))}
                           </div>
                         )}
