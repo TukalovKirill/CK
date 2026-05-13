@@ -4,7 +4,6 @@ import RequirePermission from "./components/RequirePermission";
 import PublicOnly from "./components/PublicOnly";
 import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
 import ProfilePage from "./pages/ProfilePage";
 import TeamPage from "./pages/TeamPage";
@@ -35,7 +34,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
-      <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
+      <Route path="/register" element={<Navigate to="/login" replace />} />
       <Route path="/accept-invite" element={<AcceptInvitePage />} />
 
       <Route element={<RequireAuth />}>

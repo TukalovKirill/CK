@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import AuthLayout from "../components/AuthLayout";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
@@ -27,39 +28,36 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-shell dark-texture">
-      <form onSubmit={handleSubmit} className="auth-card mx-auto max-w-lg space-y-4">
-        <h1 className="text-xl font-bold text-center" style={{ color: "var(--n-fg)" }}>Вход</h1>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="input-premium w-full"
-        />
-        <input
-          type="password"
-          placeholder="Пароль"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="input-premium w-full"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-save w-full"
-        >
+    <AuthLayout mode="login">
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div>
+          <label className="auth-label">Почта</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="auth-input"
+            placeholder="example@mail.ru"
+          />
+        </div>
+
+        <div>
+          <label className="auth-label">Пароль</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="auth-input"
+          />
+        </div>
+
+        <button type="submit" disabled={loading} className="auth-btn-primary">
           {loading ? "Вход..." : "Войти"}
+          <span className="ml-2">&rarr;</span>
         </button>
-        <p className="text-sm text-center" style={{ color: "var(--n-muted)" }}>
-          Нет аккаунта?{" "}
-          <Link to="/register" className="hover:underline" style={{ color: "var(--n-accent)" }}>
-            Зарегистрироваться
-          </Link>
-        </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }
