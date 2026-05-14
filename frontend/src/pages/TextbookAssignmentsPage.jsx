@@ -171,7 +171,7 @@ export default function TextbookAssignmentsPage() {
         <div className="page-shell page-stack">
             {/* Hero Banner */}
             <div className="hero-banner">
-                <Link to="/textbooks/manage" className="btn-ghost flex items-center gap-1.5 mb-2" style={{ color: "#555" }}>
+                <Link to="/textbooks/manage" className="btn-ghost flex items-center gap-1.5 mb-2" style={{ color: "var(--n-fg)" }}>
                     <ArrowLeft size={16} /> Управление
                 </Link>
                 <h1 className="page-title">Распределение учебников</h1>

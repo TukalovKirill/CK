@@ -2,19 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== Fonts ===== */
+
+@font-face {
+  font-family: 'Better Together';
+  src: url('./assets/fonts/BetterTogether.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ===== CSS Custom Properties (Theming) ===== */
 
 :root {
   --n-bg: #f7f7f7;
   --n-panel: #ffffff;
   --n-card: #fafafa;
-  --n-fg: #333333;
+  --n-fg: #58595B;
   --n-border: #e5e5e5;
   --n-border-h: #d0d0d0;
   --n-hover: #f2f2f2;
   --n-accent: #c8102e;
   --n-accent-hover: #a80d26;
-  --n-muted: #6b6b6b;
+  --n-muted: #8F8F8F;
   --n-dim: #999999;
   --n-mint: #7ecbc0;
   --n-mint-bg: #e6f5f0;
@@ -31,6 +41,7 @@
 }
 
 body {
+  font-family: 'Nunito', sans-serif;
   background: var(--n-bg);
   color: var(--n-fg);
   -webkit-font-smoothing: antialiased;
@@ -521,10 +532,11 @@ textarea.input-premium {
 
 /* Welcome heading */
 .auth-welcome {
+  font-family: 'Better Together', cursive;
   font-size: clamp(2rem, 4vw, 3.25rem);
-  font-weight: 800;
+  font-weight: 400;
   line-height: 1.1;
-  color: #333333;
+  color: #58595B;
   margin-bottom: 0.75rem;
 }
 
@@ -534,7 +546,7 @@ textarea.input-premium {
 
 .auth-subtitle {
   font-size: 0.95rem;
-  color: #6b6b6b;
+  color: #8F8F8F;
   line-height: 1.5;
   margin-bottom: 2rem;
 }
@@ -570,13 +582,13 @@ textarea.input-premium {
 .auth-form-card__title {
   font-size: 1rem;
   font-weight: 700;
-  color: #333333;
+  color: #58595B;
   margin-bottom: 0.25rem;
 }
 
 .auth-form-card__desc {
   font-size: 0.8125rem;
-  color: #888;
+  color: #8F8F8F;
   line-height: 1.4;
 }
 
@@ -591,7 +603,7 @@ textarea.input-premium {
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #333333;
+  color: #58595B;
   margin-bottom: 0.375rem;
 }
 
@@ -601,7 +613,7 @@ textarea.input-premium {
   border: 1px solid #e0e0e0;
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  color: #333333;
+  color: #58595B;
   background: #fff;
   outline: none;
   transition: border-color 150ms, box-shadow 150ms;
@@ -650,7 +662,7 @@ textarea.input-premium {
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #333333;
+  color: #58595B;
   background: #fff;
   cursor: pointer;
   transition: all 150ms;
@@ -677,13 +689,13 @@ textarea.input-premium {
 .auth-bottom-link__title {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #333333;
+  color: #58595B;
   margin-bottom: 0.125rem;
 }
 
 .auth-bottom-link__desc {
   font-size: 0.8125rem;
-  color: #888;
+  color: #8F8F8F;
 }
 
 /* Right panel — decorations */
@@ -745,13 +757,13 @@ textarea.input-premium {
 .auth-how-card__title {
   font-size: 1rem;
   font-weight: 700;
-  color: #333333;
+  color: #58595B;
   margin-bottom: 0.5rem;
 }
 
 .auth-how-card__text {
   font-size: 0.8125rem;
-  color: #666;
+  color: #8F8F8F;
   line-height: 1.5;
 }
 
@@ -859,12 +871,13 @@ textarea.input-premium {
 }
 
 .hero-banner .page-title {
-  font-style: italic;
+  font-family: 'Better Together', cursive;
+  font-style: normal;
   font-size: 1.75rem;
 }
 
 .hero-banner .page-subtitle {
-  color: #555;
+  color: #58595B;
 }
 
 /* ===== Utility ===== */

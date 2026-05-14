@@ -251,7 +251,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                       setYearRangeStart(Math.floor(viewYear / 20) * 20);
                       setView("months");
                     }}
-                    className="text-sm font-semibold capitalize text-gray-700 transition-colors hover:text-[#B48A5A]"
+                    className="text-sm font-semibold capitalize text-gray-700 transition-colors hover:text-brand-red"
                   >
                     {monthLabel}
                   </button>
@@ -283,9 +283,9 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                               : !inMonth
                                 ? "cursor-default text-gray-300"
                                 : isSelected
-                                  ? "bg-[#232C3A] text-[#E8CCA0]"
+                                  ? "bg-brand-red text-white"
                                   : isToday
-                                    ? "border border-[#B48A5A] text-[#D2B78E] hover:bg-[#202734]"
+                                    ? "border border-brand-red text-brand-red hover:bg-red-50"
                                     : "text-gray-700 hover:bg-gray-100"
                           }`}
                         >
@@ -308,7 +308,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                       setYearRangeStart(Math.floor(viewYear / 20) * 20);
                       setView("years");
                     }}
-                    className="text-sm font-semibold text-gray-700 transition-colors hover:text-[#B48A5A]"
+                    className="text-sm font-semibold text-gray-700 transition-colors hover:text-brand-red"
                   >
                     {viewYear}
                   </button>
@@ -325,7 +325,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                         onClick={() => { setViewMonth(i); setView("days"); }}
                         className={`rounded-lg py-2 text-sm font-medium transition-all ${
                           sel
-                            ? "bg-[#232C3A] text-[#E8CCA0]"
+                            ? "bg-brand-red text-white"
                             : "text-gray-700 hover:bg-gray-100"
                         }`}
                       >
@@ -357,7 +357,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                         onClick={() => { setViewYear(y); setView("months"); }}
                         className={`rounded-lg py-2 text-xs font-medium transition-all ${
                           sel
-                            ? "bg-[#232C3A] text-[#E8CCA0]"
+                            ? "bg-brand-red text-white"
                             : "text-gray-700 hover:bg-gray-100"
                         }`}
                       >

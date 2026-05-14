@@ -83,7 +83,7 @@ export default function TextbookCardPage() {
             {/* Hero Banner */}
             <div className="hero-banner">
                 <div className="flex items-center justify-between flex-wrap gap-3 mb-2">
-                    <Link to={returnPath} className="btn-ghost" style={{ color: "#555" }}>
+                    <Link to={returnPath} className="btn-ghost" style={{ color: "var(--n-fg)" }}>
                         <ArrowLeft size={14} /> Назад к учебникам
                     </Link>
                     <div className="flex items-center gap-2">
