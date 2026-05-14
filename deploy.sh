@@ -6,8 +6,8 @@ COMPOSE="docker compose"
 
 cd "$APP_DIR"
 
-echo "=== Building images ==="
-$COMPOSE build
+echo "=== Building images (no cache) ==="
+$COMPOSE build --no-cache
 
 echo "=== Restarting backend (zero-downtime) ==="
 $COMPOSE up -d --no-deps --build backend
