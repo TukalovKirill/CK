@@ -532,9 +532,8 @@ textarea.input-premium {
 
 /* Welcome heading */
 .auth-welcome {
-  font-family: 'Better Together', cursive;
   font-size: clamp(2rem, 4vw, 3.25rem);
-  font-weight: 400;
+  font-weight: 800;
   line-height: 1.1;
   color: #58595B;
   margin-bottom: 0.75rem;
@@ -705,9 +704,9 @@ textarea.input-premium {
   right: 2rem;
   background: #7ecbc0;
   color: #fff;
-  font-size: 1.25rem;
-  font-weight: 700;
-  font-style: italic;
+  font-family: 'Better Together', cursive;
+  font-size: 1.5rem;
+  font-weight: 400;
   padding: 1.25rem 1.5rem;
   border-radius: 1.5rem 1.5rem 0.25rem 1.5rem;
   line-height: 1.3;
@@ -871,8 +870,7 @@ textarea.input-premium {
 }
 
 .hero-banner .page-title {
-  font-family: 'Better Together', cursive;
-  font-style: normal;
+  font-weight: 700;
   font-size: 1.75rem;
 }
 
