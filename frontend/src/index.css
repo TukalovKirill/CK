@@ -697,8 +697,8 @@ textarea.input-premium {
 
 .auth-speech-bubble {
   position: absolute;
-  top: 10%;
-  right: 20%;
+  top: 6%;
+  right: 12%;
   color: #fff;
   font-family: 'Better Together', cursive;
   font-size: 1.75rem;
