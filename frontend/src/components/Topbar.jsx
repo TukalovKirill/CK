@@ -38,7 +38,7 @@ export default function Topbar({ onToggleSidebar }) {
             onClick={() => navigate("/shop/aml")}
             title="AML Мониторинг"
           >
-            <BellIcon size={24} />
+            <BellIcon size={28} />
             {pendingCount > 0 && (
               <span
                 className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold text-white"
@@ -54,7 +54,7 @@ export default function Topbar({ onToggleSidebar }) {
           className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost"
           title="Выйти"
         >
-          <LogOutIcon size={24} />
+          <LogOutIcon size={28} />
         </button>
       </div>
     </header>
