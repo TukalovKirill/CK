@@ -36,7 +36,7 @@ export default function QuizResultPage() {
   if (loading) {
     return (
       <div className="page-shell flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-2 border-gray-300 dark:border-n-dim border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -75,10 +75,10 @@ export default function QuizResultPage() {
 
         {/* Title */}
         <div className="space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight text-gray-800 dark:text-n-fg">
+          <h2 className="text-2xl font-semibold tracking-tight text-gray-700">
             {isPassed ? "Тест пройден" : "Тест не пройден"}
           </h2>
-          <p className="text-sm text-gray-500 dark:text-n-muted">{template_name}</p>
+          <p className="text-sm text-gray-500">{template_name}</p>
           <span className={isPassed ? "badge-success" : "badge-danger"}>
             {STATUS_LABELS[status] ?? status}
           </span>
@@ -87,20 +87,20 @@ export default function QuizResultPage() {
         {/* Score */}
         <div className="surface-block space-y-3 text-left">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500 dark:text-n-muted">Правильных ответов</span>
-            <span className="text-sm font-semibold text-gray-800 dark:text-n-fg">
+            <span className="text-sm text-gray-500">Правильных ответов</span>
+            <span className="text-sm font-semibold text-gray-700">
               {score_raw} из {total_questions}
             </span>
           </div>
 
           <div className="space-y-1">
-            <div className="flex justify-between text-xs text-gray-400 dark:text-n-dim">
+            <div className="flex justify-between text-xs text-gray-400">
               <span>Результат</span>
               <span className={pct >= passPct ? "text-[#8fd1b0]" : "text-[#e6b0ab]"}>
                 {pct}%
               </span>
             </div>
-            <div className="h-2 rounded-full bg-gray-200 dark:bg-n-border overflow-hidden">
+            <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
               <div
                 className={[
                   "h-full rounded-full transition-all duration-700",
@@ -109,18 +109,18 @@ export default function QuizResultPage() {
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <p className="text-xs text-gray-400 dark:text-n-dim">
+            <p className="text-xs text-gray-400">
               Проходной балл: {passPct}%
             </p>
           </div>
 
           {violation_count > 0 && (
-            <div className="flex justify-between items-center pt-1 border-t border-gray-100 dark:border-n-border">
-              <span className="text-sm text-gray-500 dark:text-n-muted flex items-center gap-1.5">
+            <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+              <span className="text-sm text-gray-500 flex items-center gap-1.5">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
                 Нарушений зафиксировано
               </span>
-              <span className="text-sm font-semibold text-amber-500 dark:text-amber-400">
+              <span className="text-sm font-semibold text-amber-500">
                 {violation_count}
               </span>
             </div>

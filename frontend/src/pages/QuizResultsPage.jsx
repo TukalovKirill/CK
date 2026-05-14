@@ -89,25 +89,25 @@ function StatusIcon({ status, className = "h-4 w-4" }) {
   switch (status) {
     case "passed":
     case "passed_with_flags":
-      return <CheckCircle2 className={`${className} text-green-500 dark:text-[#8fd1b0]`} />;
+      return <CheckCircle2 className={`${className} text-green-500`} />;
     case "completed":
     case "terminated_for_violation":
-      return <XCircle className={`${className} text-red-500 dark:text-[#e6b0ab]`} />;
+      return <XCircle className={`${className} text-red-500`} />;
     case "suspicious_attempt":
-      return <AlertTriangle className={`${className} text-amber-500 dark:text-[#d9bc8d]`} />;
+      return <AlertTriangle className={`${className} text-amber-500`} />;
     default:
-      return <Clock className={`${className} text-gray-400 dark:text-n-dim`} />;
+      return <Clock className={`${className} text-gray-400`} />;
   }
 }
 
 function ScorePill({ pct }) {
-  if (pct == null) return <span className="text-gray-400 dark:text-n-dim">—</span>;
+  if (pct == null) return <span className="text-gray-400">—</span>;
   const color =
     pct >= 80
-      ? "text-green-600 dark:text-[#8fd1b0]"
+      ? "text-green-600"
       : pct >= 60
-      ? "text-amber-600 dark:text-[#d9bc8d]"
-      : "text-red-600 dark:text-[#e6b0ab]";
+      ? "text-amber-600"
+      : "text-red-600";
   return <span className={`font-semibold tabular-nums ${color}`}>{pct.toFixed(0)}%</span>;
 }
 
@@ -426,16 +426,16 @@ function ResultRow({ result, onReview }) {
   return (
     <>
       <tr
-        className="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-[#252B3B]/30"
+        className="cursor-pointer transition-colors hover:bg-gray-50"
         onClick={() => setExpanded((v) => !v)}
       >
         <td className="px-3 py-3">
-          <span className="text-sm font-medium text-gray-800 dark:text-n-fg">
+          <span className="text-sm font-medium text-gray-700">
             {result.employee_name}
           </span>
         </td>
         <td className="px-3 py-3">
-          <span className="text-sm text-gray-600 dark:text-n-muted">{result.template_name}</span>
+          <span className="text-sm text-gray-600">{result.template_name}</span>
         </td>
         <td className="px-3 py-3">
           <ScorePill pct={result.score_pct} />
@@ -445,17 +445,17 @@ function ResultRow({ result, onReview }) {
             {statusLabel(result.status)}
           </span>
         </td>
-        <td className="px-3 py-3 text-sm text-gray-500 dark:text-n-muted tabular-nums">
+        <td className="px-3 py-3 text-sm text-gray-500 tabular-nums">
           {formatDate(result.started_at)}
         </td>
         <td className="px-3 py-3">
           {result.violation_count > 0 ? (
-            <span className="flex items-center gap-1 text-sm font-medium text-amber-600 dark:text-[#d9bc8d]">
+            <span className="flex items-center gap-1 text-sm font-medium text-amber-600">
               <AlertTriangle className="h-3.5 w-3.5" />
               {result.violation_count}
             </span>
           ) : (
-            <span className="text-sm text-gray-400 dark:text-n-dim">—</span>
+            <span className="text-sm text-gray-400">—</span>
           )}
         </td>
         <td className="px-3 py-3 text-right">
@@ -470,7 +470,7 @@ function ResultRow({ result, onReview }) {
             >
               <Eye className="h-4 w-4" />
             </button>
-            <span className="text-gray-400 dark:text-n-dim">
+            <span className="text-gray-400">
               {expanded ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (
@@ -485,30 +485,30 @@ function ResultRow({ result, onReview }) {
         <tr>
           <td
             colSpan={7}
-            className="border-b border-[var(--ui-border-soft)] bg-gray-50/60 px-6 py-4 dark:bg-[#1A1E2A]/60"
+            className="border-b border-[var(--ui-border-soft)] bg-gray-50/60 px-6 py-4"
           >
             <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
               <div>
-                <span className="text-xs text-gray-400 dark:text-n-dim">Покинул страницу</span>
-                <p className="font-medium text-gray-800 dark:text-n-fg">
+                <span className="text-xs text-gray-400">Покинул страницу</span>
+                <p className="font-medium text-gray-700">
                   {result.violation_count > 0
                     ? `${result.violation_count} раз (${formatMs(result.total_hidden_ms ?? 0)} вне теста)`
                     : "Не покидал"}
                 </p>
               </div>
               <div>
-                <span className="text-xs text-gray-400 dark:text-n-dim">Попытка</span>
-                <p className="font-medium text-gray-800 dark:text-n-fg">№ {result.id}</p>
+                <span className="text-xs text-gray-400">Попытка</span>
+                <p className="font-medium text-gray-700">№ {result.id}</p>
               </div>
               <div>
-                <span className="text-xs text-gray-400 dark:text-n-dim">Завершён</span>
-                <p className="font-medium text-gray-800 dark:text-n-fg">
+                <span className="text-xs text-gray-400">Завершён</span>
+                <p className="font-medium text-gray-700">
                   {formatDate(result.completed_at)}
                 </p>
               </div>
               <div>
-                <span className="text-xs text-gray-400 dark:text-n-dim">Длительность</span>
-                <p className="font-medium text-gray-800 dark:text-n-fg">
+                <span className="text-xs text-gray-400">Длительность</span>
+                <p className="font-medium text-gray-700">
                   {formatDuration(result.started_at, result.completed_at)}
                 </p>
               </div>
@@ -715,19 +715,19 @@ export default function QuizResultsPage() {
                 label: "Всего попыток",
                 value: stats.total,
                 icon: <BarChart3 className="h-5 w-5 text-n-accent" />,
-                color: "text-gray-800 dark:text-n-fg",
+                color: "text-gray-700",
               },
               {
                 label: "Пройдено",
                 value: stats.passed,
-                icon: <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-[#8fd1b0]" />,
-                color: "text-green-600 dark:text-[#8fd1b0]",
+                icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+                color: "text-green-600",
               },
               {
                 label: "Провалено",
                 value: stats.failed,
-                icon: <XCircle className="h-5 w-5 text-red-500 dark:text-[#e6b0ab]" />,
-                color: "text-red-600 dark:text-[#e6b0ab]",
+                icon: <XCircle className="h-5 w-5 text-red-500" />,
+                color: "text-red-600",
               },
               {
                 label: "Средний балл",
@@ -735,10 +735,10 @@ export default function QuizResultsPage() {
                 icon: <Eye className="h-5 w-5 text-n-accent" />,
                 color:
                   stats.avgScore >= 80
-                    ? "text-green-600 dark:text-[#8fd1b0]"
+                    ? "text-green-600"
                     : stats.avgScore >= 60
-                    ? "text-amber-600 dark:text-[#d9bc8d]"
-                    : "text-red-600 dark:text-[#e6b0ab]",
+                    ? "text-amber-600"
+                    : "text-red-600",
               },
             ].map((stat) => (
               <div
@@ -747,7 +747,7 @@ export default function QuizResultsPage() {
               >
                 <div className="shrink-0">{stat.icon}</div>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-500 dark:text-n-dim">{stat.label}</p>
+                  <p className="text-xs text-gray-500">{stat.label}</p>
                   <p className={`text-lg font-semibold tabular-nums ${stat.color}`}>
                     {stat.value}
                   </p>
@@ -761,12 +761,12 @@ export default function QuizResultsPage() {
         <div className="surface-panel overflow-x-auto">
           {loading && !initialLoaded ? (
             <div className="flex justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-transparent dark:border-n-dim dark:border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
             </div>
           ) : !initialLoaded ? null : results.length === 0 ? (
             <div className="surface-empty py-12 text-center">
-              <BarChart3 className="mx-auto mb-2 h-10 w-10 opacity-30 dark:text-n-muted" />
-              <p className="text-sm text-gray-500 dark:text-n-dim">
+              <BarChart3 className="mx-auto mb-2 h-10 w-10 opacity-30" />
+              <p className="text-sm text-gray-500">
                 {selectedUnit || selectedDept || selectedRole || selectedTemplate
                   ? "Нет результатов по заданным фильтрам"
                   : "Результаты тестирования ещё не появились"}
@@ -787,7 +787,7 @@ export default function QuizResultsPage() {
                   ].map((col, i) => (
                     <th
                       key={i}
-                      className={`px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-n-muted ${
+                      className={`px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 ${
                         i === 6 ? "text-right" : ""
                       }`}
                     >
@@ -810,8 +810,8 @@ export default function QuizResultsPage() {
 
           {loading && initialLoaded && (
             <div className="flex items-center justify-center gap-2 border-t border-[var(--ui-border-soft)] py-3">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent dark:border-n-dim dark:border-t-transparent" />
-              <span className="text-sm text-gray-400 dark:text-n-dim">Обновление…</span>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
+              <span className="text-sm text-gray-400">Обновление…</span>
             </div>
           )}
         </div>

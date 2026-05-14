@@ -203,7 +203,7 @@ export default function QuizSettingsPage() {
   if (loading) {
     return (
       <div className="page-shell flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-2 border-gray-300 dark:border-n-dim border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -227,7 +227,7 @@ export default function QuizSettingsPage() {
           {/* Left: Template list */}
           <div className="surface-panel space-y-2 max-h-[75vh] overflow-y-auto">
             {templates.length === 0 && (
-              <p className="text-sm text-gray-500 dark:text-n-dim text-center py-8">
+              <p className="text-sm text-gray-500 text-center py-8">
                 Нет шаблонов. Создайте первый тест.
               </p>
             )}
@@ -237,12 +237,12 @@ export default function QuizSettingsPage() {
                 onClick={() => setSelectedId(t.id)}
                 className={`w-full text-left px-3 py-3 rounded-xl transition-colors duration-200 ${
                   selectedId === t.id
-                    ? "bg-gray-100 dark:bg-n-hover border border-gray-200 dark:border-n-border-h"
-                    : "hover:bg-gray-50 dark:hover:bg-n-hover/50"
+                    ? "bg-gray-100 border border-gray-200"
+                    : "hover:bg-gray-50"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-800 dark:text-n-fg truncate">
+                  <span className="text-sm font-medium text-gray-700 truncate">
                     {t.name}
                   </span>
                   <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
@@ -253,7 +253,7 @@ export default function QuizSettingsPage() {
                     {t.mode === "exam" ? "Экзамен" : "Обучение"}
                   </span>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-n-dim mt-1">
+                <div className="text-xs text-gray-500 mt-1">
                   {t.unit_name} · {t.questions_count} вопр.
                 </div>
               </button>
@@ -275,16 +275,16 @@ export default function QuizSettingsPage() {
                 onDelete={handleDelete}
                 saving={saving}
               />
-              <hr className="border-gray-200 dark:border-n-border" />
+              <hr className="border-gray-200" />
               <MaterialsSection templateId={detail.id} detail={detail} onFieldChange={updateField} onReload={() => loadDetail(detail.id)} />
-              <hr className="border-gray-200 dark:border-n-border" />
+              <hr className="border-gray-200" />
               <QuestionsSection detail={detail} onReload={() => loadDetail(detail.id)} />
-              <hr className="border-gray-200 dark:border-n-border" />
+              <hr className="border-gray-200" />
               <PublicationSection templateId={detail.id} detail={detail} units={units} onFieldChange={updateField} onReload={() => loadDetail(detail.id)} />
             </div>
           ) : (
             <div className="surface-panel flex items-center justify-center min-h-[300px]">
-              <p className="text-sm text-gray-500 dark:text-n-dim">
+              <p className="text-sm text-gray-500">
                 Выберите шаблон из списка или создайте новый
               </p>
             </div>
@@ -348,7 +348,7 @@ function TemplateMeta({ detail, units, departments, roles, onFieldChange, onUnit
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold text-gray-800 dark:text-n-fg">Основные настройки</h2>
+        <h2 className="text-[15px] font-semibold text-gray-700">Основные настройки</h2>
         <div className="flex gap-2">
           <button className="btn btn-danger btn-sm" onClick={onDelete}>
             <Trash2 className="w-3.5 h-3.5" />
@@ -362,7 +362,7 @@ function TemplateMeta({ detail, units, departments, roles, onFieldChange, onUnit
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm text-gray-500 dark:text-n-dim mb-1">Название</label>
+          <label className="block text-sm text-gray-500 mb-1">Название</label>
           <input
             className="input-premium w-full"
             value={detail.name}
@@ -370,7 +370,7 @@ function TemplateMeta({ detail, units, departments, roles, onFieldChange, onUnit
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-500 dark:text-n-dim mb-1">Режим</label>
+          <label className="block text-sm text-gray-500 mb-1">Режим</label>
           <Dropdown
             value={detail.mode}
             onChange={v => onFieldChange("mode", v)}
@@ -399,7 +399,7 @@ function TemplateMeta({ detail, units, departments, roles, onFieldChange, onUnit
           options={[{ value: "", label: "Все" }, ...roles.map(r => ({ value: r.id, label: r.title }))]}
         />
         <div>
-          <label className="block text-sm text-gray-500 dark:text-n-dim mb-1">Порог прохождения (%)</label>
+          <label className="block text-sm text-gray-500 mb-1">Порог прохождения (%)</label>
           <div className="flex items-center gap-3">
             <PremiumSlider
               min={0} max={100}
@@ -421,14 +421,14 @@ function TemplateMeta({ detail, units, departments, roles, onFieldChange, onUnit
                   onFieldChange("pass_score_pct", clamped);
                 }}
               />
-              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[11px] text-gray-400 dark:text-n-dim pointer-events-none">%</span>
+              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[11px] text-gray-400 pointer-events-none">%</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="flex gap-6">
-        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-n-fg cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
           <input
             type="checkbox" className="check-premium"
             checked={detail.shuffle_questions}
@@ -436,7 +436,7 @@ function TemplateMeta({ detail, units, departments, roles, onFieldChange, onUnit
           />
           Перемешивать вопросы
         </label>
-        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-n-fg cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
           <input
             type="checkbox" className="check-premium"
             checked={detail.shuffle_options}
@@ -539,14 +539,14 @@ function MaterialsSection({ templateId, detail, onFieldChange, onReload }) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-[15px] font-semibold text-gray-800 dark:text-n-fg flex items-center gap-2">
-        <BookOpen className="w-4 h-4 text-gray-400 dark:text-n-dim" />
+      <h2 className="text-[15px] font-semibold text-gray-700 flex items-center gap-2">
+        <BookOpen className="w-4 h-4 text-gray-400" />
         Материалы для изучения
       </h2>
 
       {/* Description */}
       <div>
-        <label className="block text-sm text-gray-500 dark:text-n-dim mb-1">Описание материалов</label>
+        <label className="block text-sm text-gray-500 mb-1">Описание материалов</label>
         <textarea
           className="input-premium w-full min-h-[60px] resize-y"
           value={detail.description || ""}
@@ -557,12 +557,12 @@ function MaterialsSection({ templateId, detail, onFieldChange, onReload }) {
 
       {/* Sections & categories */}
       <div className="space-y-2">
-        <span className="text-xs font-medium text-gray-500 dark:text-n-dim uppercase tracking-wider">Разделы учебника</span>
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Разделы учебника</span>
         {detail.materials?.map(m => (
           <div key={m.id} className="flex items-center justify-between px-3 py-2 surface-block rounded-lg">
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-n-accent" />
-              <span className="text-sm text-gray-800 dark:text-n-fg">
+              <span className="text-sm text-gray-700">
                 {m.section_name}{m.category_name ? ` → ${m.category_name}` : ""}
               </span>
             </div>
@@ -598,7 +598,7 @@ function MaterialsSection({ templateId, detail, onFieldChange, onReload }) {
       {/* Files */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-gray-500 dark:text-n-dim uppercase tracking-wider">Файлы</span>
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Файлы</span>
           <label className="btn btn-ghost btn-sm cursor-pointer">
             <Plus className="w-3.5 h-3.5 mr-1" />Загрузить
             <input type="file" className="hidden" onChange={handleFileUpload} />
@@ -608,8 +608,8 @@ function MaterialsSection({ templateId, detail, onFieldChange, onReload }) {
           <div key={f.id} className="flex items-center justify-between px-3 py-2 surface-block rounded-lg">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-n-accent" />
-              <span className="text-sm text-gray-800 dark:text-n-fg">{f.name}</span>
-              <span className="text-[11px] text-gray-400 dark:text-n-dim">{f.file_type}</span>
+              <span className="text-sm text-gray-700">{f.name}</span>
+              <span className="text-[11px] text-gray-400">{f.file_type}</span>
             </div>
             <button onClick={() => handleRemoveFile(f.id)} className="text-gray-400 hover:text-red-400 transition-colors">
               <X className="w-4 h-4" />
@@ -620,12 +620,12 @@ function MaterialsSection({ templateId, detail, onFieldChange, onReload }) {
 
       {/* Links */}
       <div className="space-y-2">
-        <span className="text-xs font-medium text-gray-500 dark:text-n-dim uppercase tracking-wider">Внешние ссылки</span>
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Внешние ссылки</span>
         {detail.links?.map(l => (
           <div key={l.id} className="flex items-center gap-2 px-3 py-2 surface-block rounded-lg min-w-0">
             <Link2 className="w-4 h-4 text-n-accent shrink-0" />
-            <span className="text-sm text-gray-800 dark:text-n-fg shrink-0">{l.name}</span>
-            <span className="text-xs text-gray-400 dark:text-n-dim truncate min-w-0">{l.url}</span>
+            <span className="text-sm text-gray-700 shrink-0">{l.name}</span>
+            <span className="text-xs text-gray-400 truncate min-w-0">{l.url}</span>
             <button onClick={() => handleRemoveLink(l.id)} className="text-gray-400 hover:text-red-400 transition-colors shrink-0 ml-auto">
               <X className="w-4 h-4" />
             </button>
@@ -679,7 +679,7 @@ function QuestionsSection({ detail, onReload }) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-[15px] font-semibold text-gray-800 dark:text-n-fg">
+      <h2 className="text-[15px] font-semibold text-gray-700">
         Вопросы ({detail.questions?.length || 0})
       </h2>
 
@@ -697,8 +697,8 @@ function QuestionsSection({ detail, onReload }) {
         ))}
       </div>
 
-      <div className="flex items-center gap-2 border border-dashed border-gray-300 dark:border-n-border rounded-xl px-3 py-2.5">
-        <span className="text-sm font-medium text-gray-400 dark:text-n-dim flex-shrink-0">
+      <div className="flex items-center gap-2 border border-dashed border-gray-300 rounded-xl px-3 py-2.5">
+        <span className="text-sm font-medium text-gray-400 flex-shrink-0">
           {(detail.questions?.length || 0) + 1}.
         </span>
         <input
@@ -773,8 +773,8 @@ function QuestionEditor({ question, index, expanded, onToggle, onDelete, onReloa
   return (
     <div className="surface-block rounded-xl">
       <div className="flex items-center gap-2 px-3 py-2.5">
-        <GripVertical className="w-4 h-4 text-gray-400 dark:text-n-dim flex-shrink-0" />
-        <span className="text-sm font-medium text-gray-700 dark:text-n-muted flex-shrink-0">{index + 1}.</span>
+        <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <span className="text-sm font-medium text-gray-700 flex-shrink-0">{index + 1}.</span>
         <input
           className="input-premium flex-1 text-sm"
           value={text}
@@ -791,7 +791,7 @@ function QuestionEditor({ question, index, expanded, onToggle, onDelete, onReloa
       </div>
 
       {expanded && (
-        <div className="px-3 pb-3 space-y-3 border-t border-gray-100 dark:border-n-border pt-3">
+        <div className="px-3 pb-3 space-y-3 border-t border-gray-100 pt-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Dropdown
               label="Тип ответа"
@@ -804,7 +804,7 @@ function QuestionEditor({ question, index, expanded, onToggle, onDelete, onReloa
             />
 
             <div>
-              <label className="block text-sm text-gray-500 dark:text-n-dim mb-1">Таймер</label>
+              <label className="block text-sm text-gray-500 mb-1">Таймер</label>
               <div className="flex items-center gap-3">
                 <PremiumSlider
                   min={15} max={60}
@@ -821,13 +821,13 @@ function QuestionEditor({ question, index, expanded, onToggle, onDelete, onReloa
                     onBlur={clampTimerInput}
                   />
                 </div>
-                <span className="text-[11px] text-gray-400 dark:text-n-dim shrink-0">сек</span>
+                <span className="text-[11px] text-gray-400 shrink-0">сек</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs font-medium text-gray-500 dark:text-n-dim uppercase tracking-wider">Варианты ответа</span>
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Варианты ответа</span>
             {question.options?.map(opt => (
               <div key={opt.id} className="flex items-center gap-2">
                 <button
@@ -996,14 +996,14 @@ function PublicationSection({ templateId, detail, units, onFieldChange, onReload
 
   return (
     <div className="space-y-4">
-      <h2 className="text-[15px] font-semibold text-gray-800 dark:text-n-fg flex items-center gap-2">
-        <Send className="w-4 h-4 text-gray-400 dark:text-n-dim" />
+      <h2 className="text-[15px] font-semibold text-gray-700 flex items-center gap-2">
+        <Send className="w-4 h-4 text-gray-400" />
         Публикация теста
         <span className="group/tip relative">
           <button type="button" className="text-[#6B7A99] hover:text-[#C19A6B] cursor-help transition-colors duration-150 peer">
             <Info size={15} strokeWidth={1.8} />
           </button>
-          <span className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-normal rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-xs font-normal leading-relaxed text-gray-400 dark:text-n-dim shadow-lg opacity-0 transition-opacity duration-200 group-hover/tip:opacity-100 peer-focus:opacity-100 w-56 sm:w-64">
+          <span className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-normal rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-xs font-normal leading-relaxed text-gray-400 shadow-lg opacity-0 transition-opacity duration-200 group-hover/tip:opacity-100 peer-focus:opacity-100 w-56 sm:w-64">
             Дедлайны считаются от момента публикации для текущих сотрудников и от даты регистрации для новых. Дни на прохождение начинают отсчёт после завершения периода изучения.
           </span>
         </span>
@@ -1012,7 +1012,7 @@ function PublicationSection({ templateId, detail, units, onFieldChange, onReload
       {/* Days deadlines */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm text-gray-500 dark:text-n-dim mb-1">Дней на изучение</label>
+          <label className="block text-sm text-gray-500 mb-1">Дней на изучение</label>
           <WheelNumberInput
             value={detail.study_deadline_days}
             onChange={v => onFieldChange("study_deadline_days", v)}
@@ -1020,7 +1020,7 @@ function PublicationSection({ templateId, detail, units, onFieldChange, onReload
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-500 dark:text-n-dim mb-1">Дней на прохождение</label>
+          <label className="block text-sm text-gray-500 mb-1">Дней на прохождение</label>
           <WheelNumberInput
             value={detail.attempt_deadline_days}
             onChange={v => onFieldChange("attempt_deadline_days", v)}
@@ -1041,10 +1041,10 @@ function PublicationSection({ templateId, detail, units, onFieldChange, onReload
           />
         </div>
         <div className="shrink-0">
-          <label className="block text-sm text-gray-500 dark:text-n-dim mb-1">Время</label>
+          <label className="block text-sm text-gray-500 mb-1">Время</label>
           <div className="flex items-center gap-1.5">
             <WheelTimeInput value={pubHour} onChange={setPubHour} max={23} />
-            <span className="text-gray-400 dark:text-n-dim font-bold">:</span>
+            <span className="text-gray-400 font-bold">:</span>
             <WheelTimeInput value={pubMinute} onChange={setPubMinute} max={59} />
           </div>
         </div>
@@ -1057,16 +1057,16 @@ function PublicationSection({ templateId, detail, units, onFieldChange, onReload
       {/* Existing assignments */}
       {assignments.length > 0 && (
         <div className="space-y-2">
-          <span className="text-xs font-medium text-gray-500 dark:text-n-dim uppercase tracking-wider">Опубликованные</span>
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Опубликованные</span>
           {assignments.map(a => (
             <div key={a.id} className="flex items-center justify-between px-3 py-2 surface-block rounded-lg">
               <div className="flex flex-col gap-0.5">
-                <span className="text-sm text-gray-800 dark:text-n-fg">
+                <span className="text-sm text-gray-700">
                   {a.unit_name}
                   {a.department_name && ` · ${a.department_name}`}
                   {a.org_role_title && ` · ${a.org_role_title}`}
                 </span>
-                <span className="text-xs text-gray-500 dark:text-n-dim">{formatAssignment(a)}</span>
+                <span className="text-xs text-gray-500">{formatAssignment(a)}</span>
               </div>
               <button onClick={() => handleDelete(a.id)} className="text-gray-400 hover:text-red-400 shrink-0 ml-2">
                 <X className="w-4 h-4" />

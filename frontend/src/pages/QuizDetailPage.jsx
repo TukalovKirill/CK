@@ -51,7 +51,7 @@ function FilePreviewModal({ file, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between shrink-0">
-          <h2 className="text-lg font-semibold tracking-tight text-gray-800 dark:text-n-fg truncate pr-4">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-700 truncate pr-4">
             {file.name}
           </h2>
           <button className="btn btn-ghost px-2 py-1 text-xl leading-none" onClick={onClose}>&times;</button>
@@ -100,7 +100,7 @@ export default function QuizDetailPage() {
   if (loading) {
     return (
       <div className="page-shell flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-2 border-gray-300 dark:border-n-dim border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -166,16 +166,16 @@ export default function QuizDetailPage() {
             <div className="flex flex-wrap gap-4">
               {study_deadline && (
                 <div className="flex items-center gap-1.5 text-sm">
-                  <Clock className={`h-4 w-4 ${studyOverdue ? "text-red-400" : "text-gray-400 dark:text-n-dim"}`} />
-                  <span className={studyOverdue ? "text-red-500 dark:text-[#e6b0ab]" : "text-gray-500 dark:text-n-dim"}>
+                  <Clock className={`h-4 w-4 ${studyOverdue ? "text-red-400" : "text-gray-400"}`} />
+                  <span className={studyOverdue ? "text-red-500" : "text-gray-500"}>
                     Изучить до: <span className="font-medium">{formatDeadline(study_deadline)}</span>
                   </span>
                 </div>
               )}
               {attempt_deadline && (
                 <div className="flex items-center gap-1.5 text-sm">
-                  <CalendarClock className={`h-4 w-4 ${attemptOverdue ? "text-red-400" : "text-gray-400 dark:text-n-dim"}`} />
-                  <span className={attemptOverdue ? "text-red-500 dark:text-[#e6b0ab]" : "text-gray-500 dark:text-n-dim"}>
+                  <CalendarClock className={`h-4 w-4 ${attemptOverdue ? "text-red-400" : "text-gray-400"}`} />
+                  <span className={attemptOverdue ? "text-red-500" : "text-gray-500"}>
                     Сдать до: <span className="font-medium">{formatDeadline(attempt_deadline)}</span>
                   </span>
                 </div>
@@ -187,7 +187,7 @@ export default function QuizDetailPage() {
         {/* Description */}
         {template.description && (
           <div className="surface-panel">
-            <p className="text-sm text-gray-600 dark:text-n-muted leading-relaxed">
+            <p className="text-sm text-gray-600 leading-relaxed">
               {template.description}
             </p>
           </div>
@@ -196,14 +196,14 @@ export default function QuizDetailPage() {
         {/* Materials */}
         {hasMaterials && (
           <div className="surface-panel space-y-4">
-            <h2 className="text-[15px] font-semibold text-gray-800 dark:text-n-fg flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-gray-400 dark:text-n-dim" />
+            <h2 className="text-[15px] font-semibold text-gray-700 flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-gray-400" />
               Материалы для изучения
             </h2>
 
             {materials.length > 0 && (
               <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-n-dim">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
                   Разделы учебника
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -216,7 +216,7 @@ export default function QuizDetailPage() {
                     return (
                       <button
                         key={`${m.section_id}-${m.category_id ?? idx}`}
-                        className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-sm font-medium text-gray-700 dark:text-n-muted transition-colors hover:border-n-accent/50 hover:text-n-accent dark:hover:text-n-accent"
+                        className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-n-accent/50 hover:text-n-accent"
                         onClick={() => navigate(`/textbooks?${params.toString()}`)}
                       >
                         <BookOpen className="h-4 w-4 flex-shrink-0" />
@@ -230,7 +230,7 @@ export default function QuizDetailPage() {
 
             {files.length > 0 && (
               <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-n-dim">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
                   Файлы
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -238,7 +238,7 @@ export default function QuizDetailPage() {
                     PREVIEW_TYPES.has((f.file_type ?? "").toLowerCase()) ? (
                       <button
                         key={f.id}
-                        className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-sm font-medium text-gray-700 dark:text-n-muted transition-colors hover:border-n-accent/50 hover:text-n-accent dark:hover:text-n-accent"
+                        className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-n-accent/50 hover:text-n-accent"
                         onClick={() => setPreviewFile(f)}
                       >
                         <FileText className="h-4 w-4 flex-shrink-0" />
@@ -249,7 +249,7 @@ export default function QuizDetailPage() {
                         key={f.id}
                         href={f.file_url}
                         download={f.name}
-                        className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-sm font-medium text-gray-700 dark:text-n-muted transition-colors hover:border-n-accent/50 hover:text-n-accent dark:hover:text-n-accent"
+                        className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-n-accent/50 hover:text-n-accent"
                       >
                         <FileText className="h-4 w-4 flex-shrink-0" />
                         <span className="truncate max-w-[240px]">{f.name}</span>
@@ -262,7 +262,7 @@ export default function QuizDetailPage() {
 
             {links.length > 0 && (
               <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-n-dim">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
                   Ссылки
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -272,7 +272,7 @@ export default function QuizDetailPage() {
                       href={lnk.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-sm font-medium text-gray-700 dark:text-n-muted transition-colors hover:border-n-accent/50 hover:text-n-accent dark:hover:text-n-accent"
+                      className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-n-accent/50 hover:text-n-accent"
                     >
                       <ExternalLink className="h-4 w-4 flex-shrink-0" />
                       <span className="truncate max-w-[240px]">{lnk.name}</span>

@@ -196,7 +196,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
 
   return (
     <div ref={ref} className="relative w-full min-w-0">
-      {label && <label className="mb-1 block text-sm text-gray-500 dark:text-[#9AA5B8]">{label}</label>}
+      {label && <label className="mb-1 block text-sm text-gray-500">{label}</label>}
 
       <div
         className={`flex min-h-[42px] w-full items-center overflow-hidden rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface-control)] text-[var(--ui-text-primary)] transition-colors ${
@@ -221,7 +221,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
           onKeyDown={handleKeyDown}
           disabled={disabled}
           onFocus={() => { if (!disabled) setOpen(true); }}
-          className="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-sm text-gray-800 outline-none placeholder:text-gray-400 dark:text-n-fg dark:placeholder:text-[#7B8598]"
+          className="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-sm text-gray-700 outline-none placeholder:text-gray-400"
         />
         <button
           type="button"
@@ -230,7 +230,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
             e.stopPropagation();
             setOpen(!open);
           }}
-          className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-500 transition-colors hover:text-gray-700 dark:text-[#D2B78E] dark:hover:text-[#E8CCA0]"
+          className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-500 transition-colors hover:text-gray-700"
         >
           <CalendarIcon />
         </button>
@@ -239,7 +239,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
       {open && (
           <div
             ref={popupRef}
-            className="absolute left-0 top-full z-50 mt-1 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-200 bg-white p-4 shadow-lg dark:border-[#394255] dark:bg-[#151A23]"
+            className="absolute left-0 top-full z-50 mt-1 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
           >
             {view === "days" && (
               <>
@@ -251,7 +251,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                       setYearRangeStart(Math.floor(viewYear / 20) * 20);
                       setView("months");
                     }}
-                    className="text-sm font-semibold capitalize text-gray-800 transition-colors hover:text-[#B48A5A] dark:text-n-fg dark:hover:text-[#D2B78E]"
+                    className="text-sm font-semibold capitalize text-gray-700 transition-colors hover:text-[#B48A5A]"
                   >
                     {monthLabel}
                   </button>
@@ -260,7 +260,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
 
                 <div className="mb-1 grid grid-cols-7 gap-1">
                   {WEEKDAYS.map((wd) => (
-                    <div key={wd} className="py-1 text-center text-xs font-semibold text-gray-500 dark:text-[#9AA5B8]">
+                    <div key={wd} className="py-1 text-center text-xs font-semibold text-gray-500">
                       {wd}
                     </div>
                   ))}
@@ -279,14 +279,14 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                           onClick={() => selectDate(ymd)}
                           className={`flex aspect-square w-full items-center justify-center rounded-lg text-xs font-medium transition-all ${
                             blocked
-                              ? "cursor-not-allowed text-gray-300 dark:text-[#3F4858] line-through"
+                              ? "cursor-not-allowed text-gray-300 line-through"
                               : !inMonth
-                                ? "cursor-default text-gray-300 dark:text-[#5F6878]"
+                                ? "cursor-default text-gray-300"
                                 : isSelected
                                   ? "bg-[#232C3A] text-[#E8CCA0]"
                                   : isToday
                                     ? "border border-[#B48A5A] text-[#D2B78E] hover:bg-[#202734]"
-                                    : "text-gray-800 hover:bg-gray-100 dark:text-n-fg dark:hover:bg-[#202734]"
+                                    : "text-gray-700 hover:bg-gray-100"
                           }`}
                         >
                           {d.getDate()}
@@ -308,7 +308,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                       setYearRangeStart(Math.floor(viewYear / 20) * 20);
                       setView("years");
                     }}
-                    className="text-sm font-semibold text-gray-800 transition-colors hover:text-[#B48A5A] dark:text-n-fg dark:hover:text-[#D2B78E]"
+                    className="text-sm font-semibold text-gray-700 transition-colors hover:text-[#B48A5A]"
                   >
                     {viewYear}
                   </button>
@@ -326,7 +326,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                         className={`rounded-lg py-2 text-sm font-medium transition-all ${
                           sel
                             ? "bg-[#232C3A] text-[#E8CCA0]"
-                            : "text-gray-800 hover:bg-gray-100 dark:text-n-fg dark:hover:bg-[#202734]"
+                            : "text-gray-700 hover:bg-gray-100"
                         }`}
                       >
                         {m}
@@ -341,7 +341,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
               <>
                 <div className="mb-3 flex items-center justify-between">
                   <button type="button" onClick={() => setYearRangeStart((s) => s - 20)} className="btn-surface h-8 w-8 px-0">‹</button>
-                  <div className="text-sm font-semibold text-gray-800 dark:text-n-fg">
+                  <div className="text-sm font-semibold text-gray-700">
                     {yearRangeStart}–{yearRangeStart + 19}
                   </div>
                   <button type="button" onClick={() => setYearRangeStart((s) => s + 20)} className="btn-surface h-8 w-8 px-0">›</button>
@@ -358,7 +358,7 @@ export default function DatePicker({ label, value, onChange, placeholder, disabl
                         className={`rounded-lg py-2 text-xs font-medium transition-all ${
                           sel
                             ? "bg-[#232C3A] text-[#E8CCA0]"
-                            : "text-gray-800 hover:bg-gray-100 dark:text-n-fg dark:hover:bg-[#202734]"
+                            : "text-gray-700 hover:bg-gray-100"
                         }`}
                       >
                         {y}

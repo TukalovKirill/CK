@@ -8,7 +8,7 @@
   --n-bg: #f7f7f7;
   --n-panel: #ffffff;
   --n-card: #fafafa;
-  --n-fg: #1a1a1a;
+  --n-fg: #333333;
   --n-border: #e5e5e5;
   --n-border-h: #d0d0d0;
   --n-hover: #f2f2f2;
@@ -524,7 +524,7 @@ textarea.input-premium {
   font-size: clamp(2rem, 4vw, 3.25rem);
   font-weight: 800;
   line-height: 1.1;
-  color: #1a1a1a;
+  color: #333333;
   margin-bottom: 0.75rem;
 }
 
@@ -570,7 +570,7 @@ textarea.input-premium {
 .auth-form-card__title {
   font-size: 1rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #333333;
   margin-bottom: 0.25rem;
 }
 
@@ -591,7 +591,7 @@ textarea.input-premium {
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #333333;
   margin-bottom: 0.375rem;
 }
 
@@ -601,7 +601,7 @@ textarea.input-premium {
   border: 1px solid #e0e0e0;
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  color: #1a1a1a;
+  color: #333333;
   background: #fff;
   outline: none;
   transition: border-color 150ms, box-shadow 150ms;
@@ -650,7 +650,7 @@ textarea.input-premium {
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #1a1a1a;
+  color: #333333;
   background: #fff;
   cursor: pointer;
   transition: all 150ms;
@@ -677,7 +677,7 @@ textarea.input-premium {
 .auth-bottom-link__title {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #333333;
   margin-bottom: 0.125rem;
 }
 
@@ -745,7 +745,7 @@ textarea.input-premium {
 .auth-how-card__title {
   font-size: 1rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #333333;
   margin-bottom: 0.5rem;
 }
 

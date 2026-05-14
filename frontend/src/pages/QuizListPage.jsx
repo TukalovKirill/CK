@@ -85,7 +85,7 @@ function TestCard({ item }) {
             <span className={statusInfo.badge}>{statusInfo.label}</span>
           </div>
 
-          <h2 className="text-sm font-semibold leading-snug text-gray-800 truncate">
+          <h2 className="text-sm font-semibold leading-snug text-gray-700 truncate">
             {template.name}
           </h2>
 
@@ -212,7 +212,7 @@ export default function QuizListPage() {
 
         {loading && (
           <div className="surface-panel flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-2 border-gray-300 dark:border-n-dim border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 

@@ -54,7 +54,7 @@ function ViolationBanner({ message, visible, onDismiss }) {
     <div
       className={[
         "fixed top-0 left-0 right-0 z-[200] flex items-start gap-3 px-5 py-4",
-        "bg-amber-500 dark:bg-amber-600 text-white shadow-lg",
+        "bg-amber-500 text-white shadow-lg",
         "transition-transform duration-300 ease-in-out",
         visible ? "translate-y-0" : "-translate-y-full",
       ].join(" ")}
@@ -85,8 +85,8 @@ function TimerBar({ seconds, progress, totalSeconds }) {
 
   return (
     <div className="flex items-center gap-3">
-      <Clock className="h-4 w-4 flex-shrink-0 text-gray-400 dark:text-n-dim" />
-      <div className="flex-1 h-2.5 rounded-full bg-gray-200 dark:bg-n-border overflow-hidden">
+      <Clock className="h-4 w-4 flex-shrink-0 text-gray-400" />
+      <div className="flex-1 h-2.5 rounded-full bg-gray-200 overflow-hidden">
         <div
           className={[
             "h-full rounded-full transition-[width] duration-200 ease-linear",
@@ -100,10 +100,10 @@ function TimerBar({ seconds, progress, totalSeconds }) {
         className={[
           "text-sm font-semibold tabular-nums w-8 text-right flex-shrink-0",
           seconds <= 10
-            ? "text-red-500 dark:text-red-400"
+            ? "text-red-500"
             : seconds <= Math.ceil(totalSeconds * 0.5)
-            ? "text-amber-500 dark:text-amber-400"
-            : "text-gray-700 dark:text-n-fg",
+            ? "text-amber-500"
+            : "text-gray-700",
         ].join(" ")}
       >
         {seconds}s
@@ -124,10 +124,10 @@ function TerminationScreen({ onBack }) {
           </div>
         </div>
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight text-gray-800 dark:text-n-fg">
+          <h2 className="text-xl font-semibold tracking-tight text-gray-700">
             Тест прерван
           </h2>
-          <p className="text-sm text-gray-500 dark:text-n-muted leading-relaxed">
+          <p className="text-sm text-gray-500 leading-relaxed">
             Попытка аннулирована из-за зафиксированных нарушений честности прохождения.
             Обратитесь к руководителю.
           </p>
@@ -174,7 +174,7 @@ function ResultScreen({ result, onBack }) {
 
         {/* Title */}
         <div className="space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight text-gray-800 dark:text-n-fg">
+          <h2 className="text-2xl font-semibold tracking-tight text-gray-700">
             {status === "passed" || status === "passed_with_flags" ? "Отлично!" : "Попробуйте ещё раз"}
           </h2>
           <StatusBadge status={status} />
@@ -183,21 +183,21 @@ function ResultScreen({ result, onBack }) {
         {/* Score */}
         <div className="surface-block space-y-3 text-left">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500 dark:text-n-muted">Правильных ответов</span>
-            <span className="text-sm font-semibold text-gray-800 dark:text-n-fg">
+            <span className="text-sm text-gray-500">Правильных ответов</span>
+            <span className="text-sm font-semibold text-gray-700">
               {score_raw} из {total_questions}
             </span>
           </div>
 
           {/* Score percentage bar */}
           <div className="space-y-1">
-            <div className="flex justify-between text-xs text-gray-400 dark:text-n-dim">
+            <div className="flex justify-between text-xs text-gray-400">
               <span>Результат</span>
               <span className={pct >= passPct ? "text-[#8fd1b0]" : "text-[#e6b0ab]"}>
                 {pct}%
               </span>
             </div>
-            <div className="h-2 rounded-full bg-gray-200 dark:bg-n-border overflow-hidden">
+            <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
               <div
                 className={[
                   "h-full rounded-full transition-all duration-700",
@@ -206,19 +206,19 @@ function ResultScreen({ result, onBack }) {
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <p className="text-xs text-gray-400 dark:text-n-dim">
+            <p className="text-xs text-gray-400">
               Проходной балл: {passPct}%
             </p>
           </div>
 
           {/* Violations */}
           {violation_count > 0 && (
-            <div className="flex justify-between items-center pt-1 border-t border-gray-100 dark:border-n-border">
-              <span className="text-sm text-gray-500 dark:text-n-muted flex items-center gap-1.5">
+            <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+              <span className="text-sm text-gray-500 flex items-center gap-1.5">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
                 Нарушений зафиксировано
               </span>
-              <span className="text-sm font-semibold text-amber-500 dark:text-amber-400">
+              <span className="text-sm font-semibold text-amber-500">
                 {violation_count}
               </span>
             </div>
@@ -260,7 +260,7 @@ function OptionButton({ option, selected, questionType, onChange }) {
         "surface-block w-full text-left transition-all duration-150 cursor-pointer",
         "flex items-start gap-3 hover:border-n-accent/40",
         isSelected
-          ? "border-n-accent/60 dark:border-n-accent/60 bg-[rgba(193,154,107,0.07)] dark:bg-[rgba(193,154,107,0.07)]"
+          ? "border-n-accent/60 bg-[rgba(193,154,107,0.07)]"
           : "",
       ].join(" ")}
     >
@@ -273,14 +273,14 @@ function OptionButton({ option, selected, questionType, onChange }) {
             : "w-4 h-4 rounded-md border-2 flex items-center justify-center",
           isSelected
             ? "border-n-accent bg-n-accent"
-            : "border-gray-300 dark:border-n-border-h bg-white dark:bg-n-bg",
+            : "border-gray-300 bg-white",
         ].join(" ")}
       >
         {isSelected && (
           questionType === "single" ? (
-            <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-n-bg block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-white block" />
           ) : (
-            <svg className="w-2.5 h-2.5 text-white dark:text-[#12151B]" fill="none" viewBox="0 0 12 12">
+            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
               <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )
@@ -288,7 +288,7 @@ function OptionButton({ option, selected, questionType, onChange }) {
       </span>
 
       {/* Text */}
-      <span className="text-sm text-gray-800 dark:text-n-fg leading-snug pt-px">
+      <span className="text-sm text-gray-700 leading-snug pt-px">
         {option.text}
       </span>
     </button>
@@ -498,7 +498,7 @@ export default function QuizTakePage() {
   } else if (loading) {
     content = (
       <div className="page-shell flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-2 border-gray-300 dark:border-n-dim border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   } else if (loadError) {
@@ -506,7 +506,7 @@ export default function QuizTakePage() {
       <div className="page-shell flex items-center justify-center min-h-[60vh]">
         <div className="surface-panel max-w-md w-full text-center space-y-4 py-8 px-6">
           <XCircle className="h-10 w-10 text-red-400 mx-auto" />
-          <p className="text-sm text-gray-700 dark:text-n-fg">{loadError}</p>
+          <p className="text-sm text-gray-700">{loadError}</p>
           <button className="btn btn-surface gap-2" onClick={goBack}>
             <ArrowLeft className="h-4 w-4" />
             Назад
@@ -531,11 +531,11 @@ export default function QuizTakePage() {
                 <span className="hidden sm:inline">Выйти</span>
               </button>
 
-              <span className="text-sm font-medium text-gray-600 dark:text-n-muted text-center flex-1">
+              <span className="text-sm font-medium text-gray-600 text-center flex-1">
                 Вопрос{" "}
-                <span className="font-semibold text-gray-800 dark:text-n-fg">{displayIndex}</span>
+                <span className="font-semibold text-gray-700">{displayIndex}</span>
                 {" "}из{" "}
-                <span className="font-semibold text-gray-800 dark:text-n-fg">{totalQuestions}</span>
+                <span className="font-semibold text-gray-700">{totalQuestions}</span>
               </span>
 
               {/* Question type hint */}
@@ -547,7 +547,7 @@ export default function QuizTakePage() {
             </div>
 
             {/* Overall progress bar */}
-            <div className="h-1.5 rounded-full bg-gray-200 dark:bg-n-border overflow-hidden">
+            <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
               <div
                 className="h-full bg-n-accent rounded-full transition-all duration-500"
                 style={{
@@ -571,11 +571,11 @@ export default function QuizTakePage() {
           {/* ── Question card ── */}
           <div className="surface-panel space-y-2">
             {isMultiple && (
-              <p className="text-xs text-gray-400 dark:text-n-dim">
+              <p className="text-xs text-gray-400">
                 Выберите все подходящие варианты
               </p>
             )}
-            <p className="text-[15px] font-semibold text-gray-800 dark:text-n-fg leading-relaxed">
+            <p className="text-[15px] font-semibold text-gray-700 leading-relaxed">
               {question?.text}
             </p>
           </div>
@@ -612,7 +612,7 @@ export default function QuizTakePage() {
             </button>
 
             {!canSubmit && !submitting && (
-              <p className="mt-2 text-center text-xs text-gray-400 dark:text-n-dim">
+              <p className="mt-2 text-center text-xs text-gray-400">
                 {isMultiple
                   ? "Выберите один или несколько вариантов"
                   : "Выберите вариант ответа"}
