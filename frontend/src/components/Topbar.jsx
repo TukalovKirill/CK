@@ -34,11 +34,11 @@ export default function Topbar({ onToggleSidebar }) {
           <span>{coinBalance}</span>
         </button>
         <button
-          className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost relative"
+          className="w-10 h-10 p-0 flex items-center justify-center rounded-lg btn-ghost relative"
           onClick={() => navigate("/shop/aml")}
           title="AML Мониторинг"
         >
-          <Bell size={32} strokeWidth={2} />
+          <Bell size={28} strokeWidth={2} />
           {pendingCount > 0 && (
             <span
               className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold text-white"
@@ -50,10 +50,10 @@ export default function Topbar({ onToggleSidebar }) {
         </button>
         <button
           onClick={() => { logout(); navigate("/login"); }}
-          className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost"
+          className="w-10 h-10 p-0 flex items-center justify-center rounded-lg btn-ghost"
           title="Выйти"
         >
-          <LogOut size={32} strokeWidth={2} />
+          <LogOut size={28} strokeWidth={2} />
         </button>
       </div>
     </header>
