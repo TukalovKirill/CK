@@ -170,9 +170,10 @@ jobs:
             fi
 
             cd ${{ env.APP_DIR }}
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
 
-            sed -i 's/\r$//' deploy.sh 2>/dev/null || true
             chmod +x deploy.sh
             ./deploy.sh
 
