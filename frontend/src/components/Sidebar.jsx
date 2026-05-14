@@ -2,16 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useAuth, hasPermission } from "../context/AuthContext";
-import {
-  BookOpen, Settings, Users, MapPin, User, Bell,
-  ChevronDown, ClipboardList, ShoppingBag,
-} from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { TextbookIcon, QuizIcon, ShopIcon, CompanyIcon, ProfileIcon } from "./Icons";
 
 const NAV_GROUPS = [
   {
     key: "textbooks",
     label: "Учебники",
-    icon: BookOpen,
+    icon: TextbookIcon,
     links: [
       { to: "/textbooks", label: "Просмотр", permission: "textbooks.view" },
       { to: "/textbooks/manage", label: "Управление", permission: "textbooks.edit" },
@@ -20,7 +18,7 @@ const NAV_GROUPS = [
   {
     key: "quizzes",
     label: "Тесты",
-    icon: ClipboardList,
+    icon: QuizIcon,
     links: [
       { to: "/quizzes", label: "Мои тесты", permission: "quizzes.take" },
       { to: "/quizzes/results", label: "Результаты", permission: "quizzes.view_stats" },
@@ -30,7 +28,7 @@ const NAV_GROUPS = [
   {
     key: "shop",
     label: "Магазин",
-    icon: ShoppingBag,
+    icon: ShopIcon,
     links: [
       { to: "/shop", label: "Витрина", permission: "shop.view" },
       { to: "/shop/my-items", label: "Мои товары", permission: "shop.view" },
@@ -45,7 +43,7 @@ const NAV_GROUPS = [
   {
     key: "company",
     label: "Компания",
-    icon: Settings,
+    icon: CompanyIcon,
     links: [
       { to: "/company-settings", label: "Оргструктура", permission: "org.view" },
       { to: "/team", label: "Команда", permission: "team.view" },
@@ -55,7 +53,7 @@ const NAV_GROUPS = [
 ];
 
 const STANDALONE_LINKS = [
-  { to: "/profile", label: "Профиль", icon: User, permission: null },
+  { to: "/profile", label: "Профиль", icon: ProfileIcon, permission: null },
 ];
 
 function NavItem({ to, label, icon: Icon, collapsed, onClick }) {
