@@ -56,8 +56,10 @@ export function ProfileIcon({ size = 20, className = "" }) {
 
 export function CoinsIcon({ size = 20, color, className = "" }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={className}>
-      <path d="M22.667 12.001V9.335C22.667 7.862 21.473 6.668 20 6.668H6.667C5.194 6.668 4 7.862 4 9.335V17.335C4 18.807 5.194 20.001 6.667 20.001H9.333M12 25.335H25.333C26.806 25.335 28 24.141 28 22.668V14.668C28 13.195 26.806 12.001 25.333 12.001H12C10.527 12.001 9.333 13.195 9.333 14.668V22.668C9.333 24.141 10.527 25.335 12 25.335ZM21.333 18.668C21.333 20.141 20.139 21.335 18.667 21.335C17.194 21.335 16 20.141 16 18.668C16 17.195 17.194 16.001 18.667 16.001C20.139 16.001 21.333 17.195 21.333 18.668Z" stroke={color || "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="10" stroke={color || "currentColor"} strokeWidth="2"/>
+      <path d="M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5-1.38 0-2.5.9-2.5 2s1.12 2 2.5 2 2.5.9 2.5 2-1.12 2-2.5 2c-1 0-2-.5-2.5-1.5" stroke={color || "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 6v2M12 16v2" stroke={color || "currentColor"} strokeWidth="2" strokeLinecap="round"/>
     </svg>
   );
 }
@@ -65,8 +67,9 @@ export function CoinsIcon({ size = 20, color, className = "" }) {
 export function BellIcon({ size = 20, className = "" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
@@ -74,9 +77,9 @@ export function BellIcon({ size = 20, className = "" }) {
 export function LogOutIcon({ size = 20, className = "" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="m16 17 5-5-5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="m16 17 5-5-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
