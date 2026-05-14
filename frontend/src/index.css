@@ -697,8 +697,8 @@ textarea.input-premium {
 
 .auth-speech-bubble {
   position: absolute;
-  top: 3rem;
-  right: 3rem;
+  top: 18%;
+  right: 18%;
   color: #fff;
   font-family: 'Better Together', cursive;
   font-size: 1.75rem;
@@ -706,6 +706,7 @@ textarea.input-premium {
   line-height: 1.3;
   z-index: 2;
   text-align: center;
+  transform: rotate(-8deg);
 }
 
 .auth-how-card {
