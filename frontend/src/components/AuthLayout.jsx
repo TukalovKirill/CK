@@ -1,5 +1,8 @@
 import { Link } from "react-router-dom";
 import { Heart, Mail } from "lucide-react";
+import logoImg from "../assets/846089bf-794e-4a81-987d-46dfdc592db4.png";
+import rightPanelImg from "../assets/bb563248-20cc-474f-be1c-afc93e315edf.png";
+import birdImg from "../assets/d1fca599-7682-4212-a931-574cfbdb9ed6.png";
 
 export default function AuthLayout({ mode, children }) {
   const isInvite = mode === "invite";
@@ -8,9 +11,7 @@ export default function AuthLayout({ mode, children }) {
     <div className="auth-page">
       <div className="auth-page__left">
         <div className="auth-logo">
-          <div className="auth-logo__icon">
-            <span className="auth-logo__text">Своя<br/>Компа-<br/>ния</span>
-          </div>
+          <img src={logoImg} alt="Своя Компания" className="auth-logo__img" />
         </div>
 
         <h1 className="auth-welcome">
@@ -60,28 +61,25 @@ export default function AuthLayout({ mode, children }) {
       </div>
 
       <div className="auth-page__right">
+        <img src={rightPanelImg} alt="" className="auth-right-bg" />
+
         <div className="auth-speech-bubble">
           Спасибо,<br />что ты<br />с нами!
         </div>
 
-        <div className="auth-team-photo">
-          <div className="auth-team-photo__placeholder">
-            Фото команды
-          </div>
-        </div>
-
         <div className="auth-how-card">
-          <h3 className="auth-how-card__title">Как это работает?</h3>
-          <p className="auth-how-card__text">
-            Сотрудника регистрирует менеджер, а приглашение приходит на вашу почту.
-            Если письма нет — проверьте папку "Спам" или обратитесь к вашему руководителю.
-          </p>
-        </div>
-
-        <div className="auth-waves">
-          <div className="auth-waves__stripe auth-waves__stripe--red" />
-          <div className="auth-waves__stripe auth-waves__stripe--yellow" />
-          <div className="auth-waves__stripe auth-waves__stripe--blue" />
+          <div className="auth-how-card__row">
+            <img src={birdImg} alt="" className="auth-how-card__img" />
+            <div>
+              <h3 className="auth-how-card__title">Как это работает?</h3>
+              <p className="auth-how-card__text">
+                Сотрудника регистрирует менеджер,
+                а приглашение приходит на вашу почту.
+                Если письма нет — проверьте папку "Спам"
+                или обратитесь к вашему руководителю.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
