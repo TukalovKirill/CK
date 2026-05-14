@@ -29,7 +29,7 @@ export default function Topbar({ onToggleSidebar }) {
           onClick={() => navigate("/shop")}
           title="СК Коины"
         >
-          <CoinsIcon size={18} color="var(--n-accent)" />
+          <CoinsIcon size={16} color="var(--n-accent)" />
           <span>{coinBalance}</span>
         </button>
         {canReview && (
