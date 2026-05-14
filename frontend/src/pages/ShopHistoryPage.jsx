@@ -71,8 +71,11 @@ export default function ShopHistoryPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">История</h1>
+    <div className="page-shell page-stack max-w-4xl mx-auto">
+      <div className="hero-banner">
+        <h1 className="page-title">История</h1>
+        <p className="page-subtitle mt-1">Операции с коинами и заказы</p>
+      </div>
 
       <div className="flex gap-1 p-1 rounded-lg mb-6" style={{ background: "var(--n-hover)" }}>
         <button

@@ -211,14 +211,16 @@ export default function QuizSettingsPage() {
   return (
     <div className="page-shell">
       <div className="page-stack">
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">Настройка тестов</h1>
-            <p className="page-subtitle">Создавайте и настраивайте шаблоны тестов для сотрудников</p>
+        <div className="hero-banner">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="page-title">Настройка тестов</h1>
+              <p className="page-subtitle mt-1">Шаблоны и настройки тестирования</p>
+            </div>
+            <button className="btn btn-save" onClick={handleCreate}>
+              <Plus className="w-4 h-4 mr-2" />Создать тест
+            </button>
           </div>
-          <button className="btn btn-save" onClick={handleCreate}>
-            <Plus className="w-4 h-4 mr-2" />Создать тест
-          </button>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">

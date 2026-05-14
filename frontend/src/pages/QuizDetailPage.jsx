@@ -142,23 +142,21 @@ export default function QuizDetailPage() {
             <ChevronLeft className="w-4 h-4 mr-1" />Назад
           </button>
 
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                {template.mode === "learning"
-                  ? <span className="badge-success">Обучение</span>
-                  : <span className="badge-bronze">Экзамен</span>}
-                {statusInfo.warn && <AlertTriangle className="h-3.5 w-3.5 text-n-accent" />}
-                <span className={statusInfo.badge}>{statusInfo.label}</span>
-              </div>
-              <h1 className="page-title">{template.name}</h1>
-              <p className="text-sm text-gray-500 dark:text-n-dim">
-                {template.questions_count} вопр. · Порог: {template.pass_score_pct}%
-                {my_latest_attempt?.score_pct != null && (
-                  <> · Результат: <span className="font-medium text-gray-700 dark:text-n-muted">{my_latest_attempt.score_pct}%</span></>
-                )}
-              </p>
+          <div className="hero-banner">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              {template.mode === "learning"
+                ? <span className="badge-success">Обучение</span>
+                : <span className="badge-bronze">Экзамен</span>}
+              {statusInfo.warn && <AlertTriangle className="h-3.5 w-3.5 text-n-accent" />}
+              <span className={statusInfo.badge}>{statusInfo.label}</span>
             </div>
+            <h1 className="page-title">{template.name}</h1>
+            <p className="page-subtitle mt-1">
+              {template.questions_count} вопр. · Порог: {template.pass_score_pct}%
+              {my_latest_attempt?.score_pct != null && (
+                <> · Результат: <span className="font-medium">{my_latest_attempt.score_pct}%</span></>
+              )}
+            </p>
           </div>
         </div>
 

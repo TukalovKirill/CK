@@ -161,31 +161,36 @@ export default function TextbooksPage() {
 
     return (
         <div className="page-shell page-stack">
-            {/* Header */}
-            <div className="page-header">
-                <div>
-                    <h1 className="page-title">Мои учебники</h1>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="schedule-segmented">
-                        <button
-                            className={`schedule-segmented__button ${viewMode === "grid" ? "active" : ""}`}
-                            onClick={() => setViewMode("grid")}
-                        >
-                            <span className="schedule-segmented__inner"><LayoutGrid size={14} /></span>
-                        </button>
-                        <button
-                            className={`schedule-segmented__button ${viewMode === "carousel" ? "active" : ""}`}
-                            onClick={() => setViewMode("carousel")}
-                        >
-                            <span className="schedule-segmented__inner"><GalleryHorizontalEnd size={14} /></span>
-                        </button>
+            {/* Hero Banner */}
+            <div className="hero-banner">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h1 className="page-title">Мои учебники</h1>
+                        <p className="page-subtitle mt-1">Курсы, тесты и развитие</p>
                     </div>
-                    {canEdit && (
-                        <Link to="/textbooks/manage" className="btn-surface flex items-center gap-1">
-                            <Settings size={14} /> Управление
-                        </Link>
-                    )}
+                    <div className="flex items-center gap-2">
+                        <div className="schedule-segmented">
+                            <button
+                                className={`schedule-segmented__button ${viewMode === "grid" ? "active" : ""}`}
+                                data-active={viewMode === "grid"}
+                                onClick={() => setViewMode("grid")}
+                            >
+                                <span className="schedule-segmented__inner"><LayoutGrid size={14} /></span>
+                            </button>
+                            <button
+                                className={`schedule-segmented__button ${viewMode === "carousel" ? "active" : ""}`}
+                                data-active={viewMode === "carousel"}
+                                onClick={() => setViewMode("carousel")}
+                            >
+                                <span className="schedule-segmented__inner"><GalleryHorizontalEnd size={14} /></span>
+                            </button>
+                        </div>
+                        {canEdit && (
+                            <Link to="/textbooks/manage" className="btn-surface flex items-center gap-1">
+                                <Settings size={14} /> Управление
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </div>
 

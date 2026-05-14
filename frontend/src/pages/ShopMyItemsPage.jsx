@@ -66,8 +66,11 @@ export default function ShopMyItemsPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Мои товары</h1>
+    <div className="page-shell page-stack max-w-6xl mx-auto">
+      <div className="hero-banner">
+        <h1 className="page-title">Мои товары</h1>
+        <p className="page-subtitle mt-1">Купленные и активированные товары</p>
+      </div>
 
       {items.length === 0 ? (
         <div className="text-center py-12" style={{ color: "var(--n-muted)" }}>

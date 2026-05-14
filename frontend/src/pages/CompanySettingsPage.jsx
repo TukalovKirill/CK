@@ -214,7 +214,10 @@ export default function CompanySettingsPage() {
 
   return (
     <div className="page-shell page-stack">
-      <h1 className="page-title">Оргструктура</h1>
+      <div className="hero-banner">
+        <h1 className="page-title">Оргструктура</h1>
+        <p className="page-subtitle mt-1">Управление структурой компании</p>
+      </div>
       {err && <div className="surface-panel" style={{ borderColor: "#dc2626", color: "#dc2626" }}>{err}</div>}
 
       {/* UNITS */}

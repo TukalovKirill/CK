@@ -134,7 +134,10 @@ export default function ZonesPage() {
 
     return (
         <div className="page-shell page-stack">
-            <h1 className="page-title">Зоны</h1>
+            <div className="hero-banner">
+                <h1 className="page-title">Зоны</h1>
+                <p className="page-subtitle mt-1">Настройка зон обслуживания</p>
+            </div>
 
             <div className="surface-toolbar">
                 <div className="grid gap-3 md:grid-cols-3">

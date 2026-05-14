@@ -159,14 +159,12 @@ export default function ShopAssignmentsPage() {
     return (
         <div className="page-shell page-stack">
             {/* Header */}
-            <div className="page-header">
-                <Link to="/shop/manage" className="btn-ghost">
-                    <ArrowLeft size={16} /> Управление
-                </Link>
-                <div>
-                    <h1 className="page-title">Распределение товаров</h1>
-                    <p className="page-subtitle">Назначение товаров на юниты, департаменты и должности</p>
-                </div>
+            <Link to="/shop/manage" className="btn-ghost self-start">
+                <ArrowLeft size={16} /> Управление
+            </Link>
+            <div className="hero-banner">
+                <h1 className="page-title">Распределение товаров</h1>
+                <p className="page-subtitle mt-1">Настройка доступности товаров по юнитам</p>
             </div>
 
             {/* Filter toolbar */}
@@ -356,9 +354,9 @@ export default function ShopAssignmentsPage() {
                     <div
                         className="relative max-w-lg w-full rounded-[24px] p-6 flex flex-col"
                         style={{
-                            background: "linear-gradient(145deg, var(--n-panel), var(--n-card))",
+                            background: "var(--n-panel)",
                             border: "1px solid var(--n-border)",
-                            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
                             maxHeight: "80vh",
                         }}
                     >

@@ -93,9 +93,12 @@ export default function ShopCoinsPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Управление коинами</h1>
+    <div className="page-shell page-stack max-w-4xl mx-auto">
+      <div className="hero-banner">
+        <h1 className="page-title">Управление коинами</h1>
+        <p className="page-subtitle mt-1">Начисление и история баллов</p>
+      </div>
+      <div className="flex items-center justify-end mb-6">
         <button
           onClick={() => setShowAccrue(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg btn-primary text-sm"

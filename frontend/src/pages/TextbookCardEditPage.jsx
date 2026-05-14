@@ -248,11 +248,12 @@ export default function TextbookCardEditPage() {
 
     return (
         <div className="page-shell page-stack max-w-3xl mx-auto">
-            <Link to="/textbooks/manage" className="btn-ghost flex items-center gap-1.5 self-start">
-                <ArrowLeft size={16} /> Назад к управлению
-            </Link>
-
-            <h1 className="page-title">{isEdit ? "Редактирование карточки" : "Новая карточка"}</h1>
+            <div className="hero-banner">
+                <Link to="/textbooks/manage" className="btn-ghost flex items-center gap-1.5 self-start mb-2" style={{ color: "#555" }}>
+                    <ArrowLeft size={16} /> Назад к управлению
+                </Link>
+                <h1 className="page-title">{isEdit ? "Редактирование карточки" : "Новая карточка"}</h1>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
 

@@ -53,14 +53,19 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Магазин</h1>
-        {settings?.purchase_mode === "confirmation" && (
-          <span className="text-xs px-2 py-1 rounded" style={{ background: "var(--n-hover)", color: "var(--n-muted)" }}>
-            Режим с подтверждением
-          </span>
-        )}
+    <div className="page-shell page-stack max-w-6xl mx-auto">
+      <div className="hero-banner">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="page-title">Магазин</h1>
+            <p className="page-subtitle mt-1">Обменяй баллы на приятные бонусы</p>
+          </div>
+          {settings?.purchase_mode === "confirmation" && (
+            <span className="badge-muted">
+              Режим с подтверждением
+            </span>
+          )}
+        </div>
       </div>
 
       {items.length === 0 ? (

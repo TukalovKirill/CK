@@ -80,40 +80,38 @@ export default function TextbookCardPage() {
 
     return (
         <div className="page-shell page-stack">
-            {/* Top bar: back + nav + edit */}
-            <div className="flex items-center justify-between">
-                <Link to={returnPath} className="btn-ghost">
-                    <ArrowLeft size={14} /> Назад к учебникам
-                </Link>
-                <div className="flex items-center gap-2">
-                    <button
-                        className="btn-surface"
-                        disabled={!prevCard}
-                        onClick={() => prevCard && navigate(`/textbooks/card/${prevCard.id}`)}
-                        title="Предыдущая"
-                    >
-                        <ChevronLeft size={14} />
-                    </button>
-                    <button
-                        className="btn-surface"
-                        disabled={!nextCard}
-                        onClick={() => nextCard && navigate(`/textbooks/card/${nextCard.id}`)}
-                        title="Следующая"
-                    >
-                        <ChevronRight size={14} />
-                    </button>
-                    {card.can_edit && (
-                        <Link to={`/textbooks/manage/card/${id}/edit`} className="btn-surface">
-                            <Pencil size={14} /> Редактировать
-                        </Link>
-                    )}
+            {/* Hero Banner */}
+            <div className="hero-banner">
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-2">
+                    <Link to={returnPath} className="btn-ghost" style={{ color: "#555" }}>
+                        <ArrowLeft size={14} /> Назад к учебникам
+                    </Link>
+                    <div className="flex items-center gap-2">
+                        <button
+                            className="btn-surface"
+                            disabled={!prevCard}
+                            onClick={() => prevCard && navigate(`/textbooks/card/${prevCard.id}`)}
+                            title="Предыдущая"
+                        >
+                            <ChevronLeft size={14} />
+                        </button>
+                        <button
+                            className="btn-surface"
+                            disabled={!nextCard}
+                            onClick={() => nextCard && navigate(`/textbooks/card/${nextCard.id}`)}
+                            title="Следующая"
+                        >
+                            <ChevronRight size={14} />
+                        </button>
+                        {card.can_edit && (
+                            <Link to={`/textbooks/manage/card/${id}/edit`} className="btn-surface">
+                                <Pencil size={14} /> Редактировать
+                            </Link>
+                        )}
+                    </div>
                 </div>
-            </div>
-
-            {/* Title + breadcrumb */}
-            <div>
                 <h1 className="page-title">{card.name}</h1>
-                {breadcrumb && <p className="page-subtitle">{breadcrumb}</p>}
+                {breadcrumb && <p className="page-subtitle mt-1">{breadcrumb}</p>}
             </div>
 
             {/* Photo gallery */}

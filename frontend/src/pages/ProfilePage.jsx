@@ -15,7 +15,10 @@ export default function ProfilePage() {
 
     return (
         <div className="page-shell page-stack max-w-3xl mx-auto">
-            <h1 className="page-title">Профиль</h1>
+            <div className="hero-banner">
+                <h1 className="page-title">Привет, {user.first_name || user.email}!</h1>
+                <p className="page-subtitle mt-1">Твой профиль и настройки аккаунта</p>
+            </div>
 
             <div className="surface-panel">
                 <div className="grid gap-6 md:grid-cols-2">

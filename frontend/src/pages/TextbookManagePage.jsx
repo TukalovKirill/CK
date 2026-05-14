@@ -54,7 +54,7 @@ function InlineChip({ item, selected, onSelect, onRename, onDelete }) {
         <div
             className="inline-flex items-center gap-1 px-2 py-0.5 text-xs cursor-pointer rounded-md"
             style={selected
-                ? { background: "var(--n-accent)", color: "#000", border: "1px solid var(--n-accent)" }
+                ? { background: "var(--n-accent)", color: "#fff", border: "1px solid var(--n-accent)" }
                 : { background: "var(--n-hover)", border: "1px solid var(--n-border)", color: "var(--n-fg)" }
             }
         >
@@ -225,21 +225,23 @@ export default function TextbookManagePage() {
 
     return (
         <div className="page-shell page-stack">
-            {/* Header */}
-            <div className="page-header">
-                <div>
-                    <h1 className="page-title">Настройка учебников</h1>
-                    <p className="page-subtitle">Управление разделами, категориями и карточками</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    {canAssign && (
-                        <Link to="/textbooks/assignments" className="btn-surface">
-                            Распределение
+            {/* Hero Banner */}
+            <div className="hero-banner">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h1 className="page-title">Настройка учебников</h1>
+                        <p className="page-subtitle mt-1">Управление разделами, категориями и карточками</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {canAssign && (
+                            <Link to="/textbooks/assignments" className="btn-surface">
+                                Распределение
+                            </Link>
+                        )}
+                        <Link to="/textbooks/manage/card/new" className="btn-save flex items-center gap-1">
+                            <Plus size={14} /> Новая карточка
                         </Link>
-                    )}
-                    <Link to="/textbooks/manage/card/new" className="btn-save flex items-center gap-1">
-                        <Plus size={14} /> Новая карточка
-                    </Link>
+                    </div>
                 </div>
             </div>
 
@@ -270,7 +272,7 @@ export default function TextbookManagePage() {
                         onClick={() => { setSelectedSection(null); setSelectedCategory(null); }}
                         className="inline-flex items-center px-2 py-0.5 text-xs rounded-md transition-colors"
                         style={!selectedSection
-                            ? { background: "var(--n-accent)", color: "#000", border: "1px solid var(--n-accent)" }
+                            ? { background: "var(--n-accent)", color: "#fff", border: "1px solid var(--n-accent)" }
                             : { background: "var(--n-hover)", border: "1px solid var(--n-border)", color: "var(--n-fg)" }
                         }
                     >
@@ -303,7 +305,7 @@ export default function TextbookManagePage() {
                             onClick={() => setSelectedCategory(null)}
                             className="inline-flex items-center px-2 py-0.5 text-xs rounded-md transition-colors"
                             style={!selectedCategory
-                                ? { background: "var(--n-accent)", color: "#000", border: "1px solid var(--n-accent)" }
+                                ? { background: "var(--n-accent)", color: "#fff", border: "1px solid var(--n-accent)" }
                                 : { background: "var(--n-hover)", border: "1px solid var(--n-border)", color: "var(--n-fg)" }
                             }
                         >
@@ -429,9 +431,9 @@ export default function TextbookManagePage() {
                     <div
                         className="relative max-w-sm w-full rounded-[24px] p-6 space-y-4"
                         style={{
-                            background: "linear-gradient(145deg, var(--n-panel), var(--n-card))",
+                            background: "var(--n-panel)",
                             border: "1px solid var(--n-border)",
-                            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
                         }}
                     >
                         <h3 className="text-lg font-semibold" style={{ color: "var(--n-fg)" }}>

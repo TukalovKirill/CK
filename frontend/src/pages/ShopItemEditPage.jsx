@@ -131,7 +131,7 @@ export default function ShopItemEditPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="page-shell page-stack max-w-2xl mx-auto">
       <button
         onClick={() => navigate("/shop/manage")}
         className="flex items-center gap-2 mb-4 text-sm btn-ghost px-3 py-1.5 rounded-lg"
@@ -140,9 +140,11 @@ export default function ShopItemEditPage() {
         Назад
       </button>
 
-      <h1 className="text-2xl font-bold mb-6">
-        {isEdit ? "Редактирование товара" : "Новый товар"}
-      </h1>
+      <div className="hero-banner">
+        <h1 className="page-title">
+          {isEdit ? "Редактирование товара" : "Новый товар"}
+        </h1>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>

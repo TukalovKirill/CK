@@ -279,13 +279,18 @@ export default function TeamPage() {
 
     return (
         <div className="page-shell page-stack">
-            <div className="page-header">
-                <h1 className="page-title">Команда</h1>
-                {canManage && (
-                    <button onClick={openCreate} className="btn-save flex items-center gap-1.5">
-                        <Plus size={14} /> Пригласить
-                    </button>
-                )}
+            <div className="hero-banner">
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <h1 className="page-title">Команда</h1>
+                        <p className="page-subtitle mt-1">Сотрудники и приглашения</p>
+                    </div>
+                    {canManage && (
+                        <button onClick={openCreate} className="btn-save flex items-center gap-1.5">
+                            <Plus size={14} /> Пригласить
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="flex flex-wrap gap-2 mb-4">
@@ -444,9 +449,9 @@ export default function TeamPage() {
                     <div
                         className="relative max-w-xl w-full rounded-[24px] p-6 space-y-4"
                         style={{
-                            background: "linear-gradient(145deg, var(--n-panel), var(--n-card))",
+                            background: "var(--n-panel)",
                             border: "1px solid var(--n-border)",
-                            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
                         }}
                     >
                         <h3 className="text-lg font-semibold" style={{ color: "var(--n-fg)" }}>

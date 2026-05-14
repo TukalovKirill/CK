@@ -72,7 +72,7 @@ function NavItem({ to, label, icon: Icon, collapsed, onClick }) {
       }
       style={({ isActive }) => ({
         color: isActive ? "var(--n-accent)" : "var(--n-muted)",
-        background: isActive ? "var(--n-hover)" : "transparent",
+        background: isActive ? "rgba(200, 16, 46, 0.06)" : "transparent",
         boxShadow: isActive ? "inset 3px 0 0 var(--n-accent)" : "none",
       })}
     >

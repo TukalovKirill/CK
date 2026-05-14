@@ -28,13 +28,13 @@ export default function Topbar({ onToggleSidebar }) {
       </button>
 
       <div className="flex-1 flex justify-center">
-        <span
-          className="text-xl font-bold cursor-pointer"
-          style={{ color: "var(--n-accent)" }}
+        <div
+          className="cursor-pointer flex items-center justify-center rounded-lg"
+          style={{ background: "#c8102e", width: 40, height: 40, padding: 4 }}
           onClick={() => navigate("/profile")}
         >
-          CK
-        </span>
+          <span className="text-white font-extrabold text-[0.5rem] leading-tight text-center uppercase">Своя<br/>Компа-<br/>ния</span>
+        </div>
       </div>
 
       <div className="absolute right-4 flex items-center gap-2">

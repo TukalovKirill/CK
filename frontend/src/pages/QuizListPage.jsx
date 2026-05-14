@@ -85,14 +85,14 @@ function TestCard({ item }) {
             <span className={statusInfo.badge}>{statusInfo.label}</span>
           </div>
 
-          <h2 className="text-sm font-semibold leading-snug text-gray-800 dark:text-n-fg truncate">
+          <h2 className="text-sm font-semibold leading-snug text-gray-800 truncate">
             {template.name}
           </h2>
 
-          <p className="text-xs text-gray-500 dark:text-n-dim">
+          <p className="text-xs text-gray-500">
             {template.questions_count} вопр. · Порог: {template.pass_score_pct}%
             {my_latest_attempt?.score_pct != null && (
-              <> · Результат: <span className="font-medium text-gray-700 dark:text-n-muted">{my_latest_attempt.score_pct}%</span></>
+              <> · Результат: <span className="font-medium text-gray-700">{my_latest_attempt.score_pct}%</span></>
             )}
           </p>
 
@@ -101,16 +101,16 @@ function TestCard({ item }) {
             <div className="flex flex-wrap gap-3 pt-0.5">
               {study_deadline && (
                 <div className="flex items-center gap-1 text-xs">
-                  <Clock className={`h-3 w-3 ${studyOverdue ? "text-red-400" : "text-gray-400 dark:text-n-dim"}`} />
-                  <span className={studyOverdue ? "text-red-500 dark:text-[#e6b0ab]" : "text-gray-500 dark:text-n-dim"}>
+                  <Clock className={`h-3 w-3 ${studyOverdue ? "text-red-400" : "text-gray-400"}`} />
+                  <span className={studyOverdue ? "text-red-500" : "text-gray-500"}>
                     Изучить до: <span className="font-medium">{formatDeadline(study_deadline)}</span>
                   </span>
                 </div>
               )}
               {attempt_deadline && (
                 <div className="flex items-center gap-1 text-xs">
-                  <CalendarClock className={`h-3 w-3 ${attemptOverdue ? "text-red-400" : "text-gray-400 dark:text-n-dim"}`} />
-                  <span className={attemptOverdue ? "text-red-500 dark:text-[#e6b0ab]" : "text-gray-500 dark:text-n-dim"}>
+                  <CalendarClock className={`h-3 w-3 ${attemptOverdue ? "text-red-400" : "text-gray-400"}`} />
+                  <span className={attemptOverdue ? "text-red-500" : "text-gray-500"}>
                     Сдать до: <span className="font-medium">{formatDeadline(attempt_deadline)}</span>
                   </span>
                 </div>
@@ -146,7 +146,7 @@ function TestCard({ item }) {
           )}
         </div>
 
-        <ChevronRight className="h-4 w-4 shrink-0 text-gray-400 dark:text-n-dim" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />
       </div>
     </div>
   );
@@ -189,23 +189,25 @@ export default function QuizListPage() {
   return (
     <div className="page-shell">
       <div className="page-stack">
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">Мои тесты</h1>
-            <p className="page-subtitle">Назначенные тесты и учебные материалы</p>
+        <div className="hero-banner">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h1 className="page-title">Мои тесты</h1>
+              <p className="page-subtitle mt-1">Назначенные тесты и учебные материалы</p>
+            </div>
+            {isFullAccess && (
+              <label className="flex items-center gap-1.5 cursor-pointer" title="Показать все тесты компании">
+                <input
+                  type="checkbox"
+                  checked={showAll}
+                  onChange={(e) => setShowAll(e.target.checked)}
+                  className="check-premium"
+                />
+                <Eye className="w-4 h-4 text-muted" />
+                <span className="text-xs text-muted">Все тесты</span>
+              </label>
+            )}
           </div>
-          {isFullAccess && (
-            <label className="flex items-center gap-1.5 cursor-pointer" title="Показать все тесты компании">
-              <input
-                type="checkbox"
-                checked={showAll}
-                onChange={(e) => setShowAll(e.target.checked)}
-                className="check-premium"
-              />
-              <Eye className="w-4 h-4 text-muted" />
-              <span className="text-xs text-muted">Все тесты</span>
-            </label>
-          )}
         </div>
 
         {loading && (
@@ -215,7 +217,7 @@ export default function QuizListPage() {
         )}
 
         {!loading && error && (
-          <div className="rounded-xl border border-[#4A2A2A] bg-[#24191B] px-4 py-3 text-sm text-[#E6B0AB]">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
           </div>
         )}
@@ -223,8 +225,8 @@ export default function QuizListPage() {
         {!loading && !error && tests.length === 0 && (
           <div className="surface-panel">
             <div className="surface-empty flex flex-col items-center py-10">
-              <ClipboardList className="h-10 w-10 text-gray-400 dark:text-n-dim mx-auto mb-3 opacity-40" />
-              <p className="text-sm text-gray-500 dark:text-n-dim">Назначенных тестов нет</p>
+              <ClipboardList className="h-10 w-10 text-gray-400 mx-auto mb-3 opacity-40" />
+              <p className="text-sm text-gray-500">Назначенных тестов нет</p>
             </div>
           </div>
         )}

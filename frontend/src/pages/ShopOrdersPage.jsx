@@ -114,8 +114,11 @@ export default function ShopOrdersPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Управление заказами</h1>
+    <div className="page-shell page-stack max-w-4xl mx-auto">
+      <div className="hero-banner">
+        <h1 className="page-title">Управление заказами</h1>
+        <p className="page-subtitle mt-1">Подтверждение и обработка заказов</p>
+      </div>
 
       {/* Tabs: Orders / Refunds */}
       <div className="flex gap-1 p-1 rounded-lg mb-4" style={{ background: "var(--n-hover)" }}>

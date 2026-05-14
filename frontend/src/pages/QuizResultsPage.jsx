@@ -647,26 +647,28 @@ export default function QuizResultsPage() {
     <div className="page-shell">
       <div className="page-stack">
         {/* Header */}
-        <div className="page-header">
-          <div>
-            <h1 className="page-title flex items-center gap-2.5">
-              <BarChart3 className="h-7 w-7 text-n-accent" />
-              Результаты тестирования
-            </h1>
-            <p className="page-subtitle">Просмотр и анализ результатов тестов сотрудников</p>
+        <div className="hero-banner">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="page-title flex items-center gap-2.5">
+                <BarChart3 className="h-7 w-7 text-n-accent" />
+                Результаты тестирования
+              </h1>
+              <p className="page-subtitle mt-1">Статистика по тестам</p>
+            </div>
+            <button
+              className="btn btn-surface btn-sm"
+              onClick={loadResults}
+              disabled={loading}
+              title="Обновить"
+            >
+              {loading ? (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border border-current border-t-transparent" />
+              ) : (
+                "Обновить"
+              )}
+            </button>
           </div>
-          <button
-            className="btn btn-surface btn-sm"
-            onClick={loadResults}
-            disabled={loading}
-            title="Обновить"
-          >
-            {loading ? (
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border border-current border-t-transparent" />
-            ) : (
-              "Обновить"
-            )}
-          </button>
         </div>
 
         {/* Filter Toolbar */}

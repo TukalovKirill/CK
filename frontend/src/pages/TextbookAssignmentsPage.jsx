@@ -169,15 +169,13 @@ export default function TextbookAssignmentsPage() {
 
     return (
         <div className="page-shell page-stack">
-            {/* Header */}
-            <div className="page-header">
-                <Link to="/textbooks/manage" className="btn-ghost">
+            {/* Hero Banner */}
+            <div className="hero-banner">
+                <Link to="/textbooks/manage" className="btn-ghost flex items-center gap-1.5 mb-2" style={{ color: "#555" }}>
                     <ArrowLeft size={16} /> Управление
                 </Link>
-                <div>
-                    <h1 className="page-title">Распределение учебников</h1>
-                    <p className="page-subtitle">Назначение карточек на юниты, департаменты и роли</p>
-                </div>
+                <h1 className="page-title">Распределение учебников</h1>
+                <p className="page-subtitle mt-1">Назначение карточек на юниты, департаменты и роли</p>
             </div>
 
             {/* Filter toolbar */}
@@ -367,9 +365,9 @@ export default function TextbookAssignmentsPage() {
                     <div
                         className="relative max-w-lg w-full rounded-[24px] p-6 flex flex-col"
                         style={{
-                            background: "linear-gradient(145deg, var(--n-panel), var(--n-card))",
+                            background: "var(--n-panel)",
                             border: "1px solid var(--n-border)",
-                            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
                             maxHeight: "80vh",
                         }}
                     >
