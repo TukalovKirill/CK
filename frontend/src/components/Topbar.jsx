@@ -32,23 +32,21 @@ export default function Topbar({ onToggleSidebar }) {
           <CoinsIcon size={20} color="var(--n-accent)" />
           <span>{coinBalance}</span>
         </button>
-        {canReview && (
-          <button
-            className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost relative"
-            onClick={() => navigate("/shop/aml")}
-            title="AML Мониторинг"
-          >
-            <BellIcon size={24} />
-            {pendingCount > 0 && (
-              <span
-                className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold text-white"
-                style={{ background: "#ef4444" }}
-              >
-                {pendingCount > 99 ? "99+" : pendingCount}
-              </span>
-            )}
-          </button>
-        )}
+        <button
+          className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost relative"
+          onClick={() => navigate("/shop/aml")}
+          title="AML Мониторинг"
+        >
+          <BellIcon size={24} />
+          {pendingCount > 0 && (
+            <span
+              className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold text-white"
+              style={{ background: "#ef4444" }}
+            >
+              {pendingCount > 99 ? "99+" : pendingCount}
+            </span>
+          )}
+        </button>
         <button
           onClick={() => { logout(); navigate("/login"); }}
           className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost"
