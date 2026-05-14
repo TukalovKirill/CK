@@ -55,32 +55,33 @@ export function ProfileIcon({ size = 20, className = "" }) {
 /* ===== Topbar icons ===== */
 
 export function CoinsIcon({ size = 20, color, className = "" }) {
+  const c = color || "currentColor";
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <circle cx="12" cy="12" r="10" stroke={color || "currentColor"} strokeWidth="2"/>
-      <path d="M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5-1.38 0-2.5.9-2.5 2s1.12 2 2.5 2 2.5.9 2.5 2-1.12 2-2.5 2c-1 0-2-.5-2.5-1.5" stroke={color || "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M12 6v2M12 16v2" stroke={color || "currentColor"} strokeWidth="2" strokeLinecap="round"/>
+      <circle cx="12" cy="12" r="10" stroke={c} strokeWidth="2"/>
+      <path d="M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5-1.38 0-2.5.9-2.5 2s1.12 2 2.5 2 2.5.9 2.5 2-1.12 2-2.5 2c-1 0-2-.5-2.5-1.5" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 6v2M12 16v2" stroke={c} strokeWidth="2" strokeLinecap="round"/>
     </svg>
   );
 }
 
 export function BellIcon({ size = 20, className = "" }) {
   return (
-    <svg width={size} height={size} viewBox="1 0 22 23" fill="none" className={className}>
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9Z" fill="currentColor" opacity="0.15"/>
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="12" cy="2.5" r="1.5" fill="currentColor"/>
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className}>
+      <path d="M15 7a5 5 0 0 0-10 0c0 5.83-2.5 7.5-2.5 7.5h15S15 12.83 15 7Z" fill="currentColor" opacity="0.12"/>
+      <path d="M15 7a5 5 0 0 0-10 0c0 5.83-2.5 7.5-2.5 7.5h15S15 12.83 15 7Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M11.44 17a1.67 1.67 0 0 1-2.88 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="10" cy="1.8" r="1.4" fill="currentColor"/>
     </svg>
   );
 }
 
 export function LogOutIcon({ size = 20, className = "" }) {
   return (
-    <svg width={size} height={size} viewBox="1 2 22 20" fill="none" className={className}>
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="m16 17 5-5-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M21 12H9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className}>
+      <path d="M7.5 17.5H4.17a1.67 1.67 0 0 1-1.67-1.67V4.17A1.67 1.67 0 0 1 4.17 2.5H7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="m13.33 14.17 4.17-4.17-4.17-4.17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M17.5 10H7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
