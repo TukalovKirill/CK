@@ -3,7 +3,12 @@ import { NavLink, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useAuth, hasPermission } from "../context/AuthContext";
 import { ChevronDown } from "lucide-react";
-import { TextbookIcon, QuizIcon, ShopIcon, CompanyIcon, ProfileIcon } from "./Icons";
+import {
+  TextbookIcon, QuizIcon, ShopIcon, CompanyIcon, ProfileIcon,
+  EyeIcon, PencilIcon, FileTextIcon, BarChartIcon, SlidersIcon,
+  LayoutGridIcon, PackageIcon, ClockIcon, ShareIcon, WalletIcon,
+  ClipboardListIcon, ShieldIcon, OrgChartIcon, UsersIcon, MapPinIcon,
+} from "./Icons";
 
 const NAV_GROUPS = [
   {
@@ -11,8 +16,8 @@ const NAV_GROUPS = [
     label: "Учебники",
     icon: TextbookIcon,
     links: [
-      { to: "/textbooks", label: "Просмотр", permission: "textbooks.view" },
-      { to: "/textbooks/manage", label: "Управление", permission: "textbooks.edit" },
+      { to: "/textbooks", label: "Просмотр", icon: EyeIcon, permission: "textbooks.view" },
+      { to: "/textbooks/manage", label: "Управление", icon: PencilIcon, permission: "textbooks.edit" },
     ],
   },
   {
@@ -20,9 +25,9 @@ const NAV_GROUPS = [
     label: "Тесты",
     icon: QuizIcon,
     links: [
-      { to: "/quizzes", label: "Мои тесты", permission: "quizzes.take" },
-      { to: "/quizzes/results", label: "Результаты", permission: "quizzes.view_stats" },
-      { to: "/quizzes/settings", label: "Настройки", permission: "quizzes.manage_templates" },
+      { to: "/quizzes", label: "Мои тесты", icon: FileTextIcon, permission: "quizzes.take" },
+      { to: "/quizzes/results", label: "Результаты", icon: BarChartIcon, permission: "quizzes.view_stats" },
+      { to: "/quizzes/settings", label: "Настройки", icon: SlidersIcon, permission: "quizzes.manage_templates" },
     ],
   },
   {
@@ -30,14 +35,14 @@ const NAV_GROUPS = [
     label: "Магазин",
     icon: ShopIcon,
     links: [
-      { to: "/shop", label: "Витрина", permission: "shop.view" },
-      { to: "/shop/my-items", label: "Мои товары", permission: "shop.view" },
-      { to: "/shop/history", label: "История", permission: "shop.view" },
-      { to: "/shop/manage", label: "Управление", permission: "shop.edit" },
-      { to: "/shop/assignments", label: "Распределение", permission: "shop.edit" },
-      { to: "/shop/coins", label: "Коины", permission: "shop.manage_coins" },
-      { to: "/shop/orders", label: "Заказы", permission: "shop.manage_orders" },
-      { to: "/shop/aml", label: "AML", permission: "shop.review_flagged" },
+      { to: "/shop", label: "Витрина", icon: LayoutGridIcon, permission: "shop.view" },
+      { to: "/shop/my-items", label: "Мои товары", icon: PackageIcon, permission: "shop.view" },
+      { to: "/shop/history", label: "История", icon: ClockIcon, permission: "shop.view" },
+      { to: "/shop/manage", label: "Управление", icon: PencilIcon, permission: "shop.edit" },
+      { to: "/shop/assignments", label: "Распределение", icon: ShareIcon, permission: "shop.edit" },
+      { to: "/shop/coins", label: "Коины", icon: WalletIcon, permission: "shop.manage_coins" },
+      { to: "/shop/orders", label: "Заказы", icon: ClipboardListIcon, permission: "shop.manage_orders" },
+      { to: "/shop/aml", label: "AML", icon: ShieldIcon, permission: "shop.review_flagged" },
     ],
   },
   {
@@ -45,9 +50,9 @@ const NAV_GROUPS = [
     label: "Компания",
     icon: CompanyIcon,
     links: [
-      { to: "/company-settings", label: "Оргструктура", permission: "org.view" },
-      { to: "/team", label: "Команда", permission: "team.view" },
-      { to: "/zones", label: "Зоны", permission: "org.view" },
+      { to: "/company-settings", label: "Оргструктура", icon: OrgChartIcon, permission: "org.view" },
+      { to: "/team", label: "Команда", icon: UsersIcon, permission: "team.view" },
+      { to: "/zones", label: "Зоны", icon: MapPinIcon, permission: "org.view" },
     ],
   },
 ];
@@ -56,7 +61,7 @@ const STANDALONE_LINKS = [
   { to: "/profile", label: "Профиль", icon: ProfileIcon, permission: null },
 ];
 
-function NavItem({ to, label, icon: Icon, collapsed, onClick }) {
+function NavItem({ to, label, icon: Icon, iconSize = 20, collapsed, onClick }) {
   return (
     <NavLink
       to={to}
@@ -74,7 +79,7 @@ function NavItem({ to, label, icon: Icon, collapsed, onClick }) {
         boxShadow: isActive ? "inset 3px 0 0 var(--n-accent)" : "none",
       })}
     >
-      {Icon && <Icon size={20} className="shrink-0" />}
+      {Icon && <Icon size={iconSize} className="shrink-0" />}
       {!collapsed && <span>{label}</span>}
     </NavLink>
   );
@@ -178,7 +183,7 @@ function GroupAccordion({ group, collapsed, onNavigate }) {
       >
         <div className="pl-4 pt-0.5 space-y-0.5">
           {visibleLinks.map((link) => (
-            <NavItem key={link.to} to={link.to} label={link.label} onClick={onNavigate} />
+            <NavItem key={link.to} to={link.to} label={link.label} icon={link.icon} iconSize={16} onClick={onNavigate} />
           ))}
         </div>
       </div>
