@@ -34,7 +34,8 @@ export default function Topbar({ onToggleSidebar }) {
           <span>{coinBalance}</span>
         </button>
         <button
-          className="w-10 h-10 p-0 flex items-center justify-center rounded-lg btn-ghost relative"
+          className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost relative"
+          style={{ padding: 0 }}
           onClick={() => navigate("/shop/aml")}
           title="AML Мониторинг"
         >
@@ -50,7 +51,8 @@ export default function Topbar({ onToggleSidebar }) {
         </button>
         <button
           onClick={() => { logout(); navigate("/login"); }}
-          className="w-10 h-10 p-0 flex items-center justify-center rounded-lg btn-ghost"
+          className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost"
+          style={{ padding: 0 }}
           title="Выйти"
         >
           <LogOut size={28} strokeWidth={2} />
