@@ -25,6 +25,8 @@ import ShopManagePage from "./pages/ShopManagePage";
 import ShopItemEditPage from "./pages/ShopItemEditPage";
 import ShopCoinsPage from "./pages/ShopCoinsPage";
 import ShopOrdersPage from "./pages/ShopOrdersPage";
+import FeedbackSubmitPage from "./pages/FeedbackSubmitPage";
+import FeedbackWishesPage from "./pages/FeedbackWishesPage";
 
 export default function App() {
   return (
@@ -57,6 +59,8 @@ export default function App() {
           <Route path="/shop/manage/item/:id/edit" element={<RequirePermission code="shop.edit"><ShopItemEditPage /></RequirePermission>} />
           <Route path="/shop/coins" element={<RequirePermission code="shop.manage_coins"><ShopCoinsPage /></RequirePermission>} />
           <Route path="/shop/orders" element={<RequirePermission code="shop.manage_orders"><ShopOrdersPage /></RequirePermission>} />
+          <Route path="/feedback/submit" element={<RequirePermission code="feedback.submit_wish"><FeedbackSubmitPage /></RequirePermission>} />
+          <Route path="/feedback/wishes" element={<RequirePermission code="feedback.view_wishes"><FeedbackWishesPage /></RequirePermission>} />
         </Route>
       </Route>
 

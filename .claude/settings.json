@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem *)",
+      "Bash(powershell -Command \"Get-ChildItem *)",
+      "Bash(dir *)"
+    ]
+  }
+}

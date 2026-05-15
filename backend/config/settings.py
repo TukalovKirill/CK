@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.textbooks",
     "apps.shop",
+    "apps.feedback",
 ]
 
 MIDDLEWARE = [

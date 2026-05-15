@@ -7,7 +7,7 @@ import {
   TextbookIcon, QuizIcon, ShopIcon, CompanyIcon, ProfileIcon,
   EyeIcon, PencilIcon, FileTextIcon, BarChartIcon, SlidersIcon,
   LayoutGridIcon, ClockIcon, WalletIcon, ClipboardListIcon,
-  OrgChartIcon, UsersIcon,
+  OrgChartIcon, UsersIcon, FeedbackIcon, SendIcon, WishBoxIcon,
 } from "./Icons";
 
 const NAV_GROUPS = [
@@ -40,6 +40,15 @@ const NAV_GROUPS = [
       { to: "/shop/manage", label: "Управление", icon: PencilIcon, permission: "shop.edit" },
       { to: "/shop/coins", label: "Коины", icon: WalletIcon, permission: "shop.manage_coins" },
       { to: "/shop/orders", label: "Заказы", icon: ClipboardListIcon, permission: "shop.manage_orders" },
+    ],
+  },
+  {
+    key: "feedback",
+    label: "Обратная связь",
+    icon: FeedbackIcon,
+    links: [
+      { to: "/feedback/submit", label: "Написать", icon: SendIcon, permission: "feedback.submit_wish" },
+      { to: "/feedback/wishes", label: "Ящик пожеланий", icon: WishBoxIcon, permission: "feedback.view_wishes" },
     ],
   },
   {
