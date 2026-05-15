@@ -83,11 +83,18 @@ from .serializers import (
 
 def _get_employee_department_ids(employee):
     from apps.core.models import EmployeeAssignment
-    return set(
-        EmployeeAssignment.objects.filter(
-            employee=employee, department__isnull=False,
-        ).values_list("department_id", flat=True)
+    assignments = (
+        EmployeeAssignment.objects
+        .filter(employee=employee)
+        .select_related("org_role")
     )
+    dept_ids = set()
+    for ea in assignments:
+        if ea.department_id:
+            dept_ids.add(ea.department_id)
+        if ea.org_role_id and ea.org_role and ea.org_role.department_id:
+            dept_ids.add(ea.org_role.department_id)
+    return dept_ids
 
 
 def _share_department(emp_a, emp_b):
@@ -102,6 +109,9 @@ class DepartmentColleaguesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        from django.db.models import Q
+        from apps.core.models import EmployeeAssignment
+
         emp = getattr(request.user, "employee_profile", None)
         if not emp:
             return Response([])
@@ -110,12 +120,14 @@ class DepartmentColleaguesView(APIView):
         if not dept_ids:
             return Response([])
 
-        from apps.core.models import EmployeeAssignment
         colleague_assignments = (
             EmployeeAssignment.objects
-            .filter(department_id__in=dept_ids)
+            .filter(
+                Q(department_id__in=dept_ids)
+                | Q(org_role__department_id__in=dept_ids)
+            )
             .exclude(employee=emp)
-            .select_related("employee", "department")
+            .select_related("employee", "department", "org_role__department")
         )
         seen = set()
         result = []
@@ -123,11 +135,14 @@ class DepartmentColleaguesView(APIView):
             if ea.employee_id in seen:
                 continue
             seen.add(ea.employee_id)
+            dept = ea.department
+            if not dept and ea.org_role and ea.org_role.department:
+                dept = ea.org_role.department
             result.append({
                 "id": ea.employee_id,
                 "full_name": ea.employee.full_name,
-                "department_id": ea.department_id,
-                "department_name": ea.department.name if ea.department else None,
+                "department_id": dept.pk if dept else None,
+                "department_name": dept.name if dept else None,
             })
         result.sort(key=lambda x: x["full_name"])
         serializer = DepartmentColleagueSerializer(result, many=True)

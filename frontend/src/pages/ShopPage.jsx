@@ -17,7 +17,7 @@ function QuantitySelector({ value, onChange, min = 1, max = 99 }) {
         onClick={() => onChange(clamp(value - 1))}
         disabled={value <= min}
         className="w-9 h-9 rounded-lg flex items-center justify-center border transition-colors disabled:opacity-30"
-        style={{ borderColor: "var(--n-border)", color: "var(--n-fg)" }}
+        style={{ borderColor: "var(--n-border)", color: "#ef4444" }}
       >
         <Minus size={16} />
       </button>
@@ -30,11 +30,12 @@ function QuantitySelector({ value, onChange, min = 1, max = 99 }) {
         }}
         min={min}
         max={max}
-        className="w-16 h-9 text-center rounded-lg border text-sm font-medium"
+        className="w-16 h-9 text-center rounded-lg border text-sm font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         style={{
           borderColor: "var(--n-border)",
           background: "var(--n-surface)",
           color: "var(--n-fg)",
+          MozAppearance: "textfield",
         }}
       />
       <button
@@ -42,7 +43,7 @@ function QuantitySelector({ value, onChange, min = 1, max = 99 }) {
         onClick={() => onChange(clamp(value + 1))}
         disabled={value >= max}
         className="w-9 h-9 rounded-lg flex items-center justify-center border transition-colors disabled:opacity-30"
-        style={{ borderColor: "var(--n-border)", color: "var(--n-fg)" }}
+        style={{ borderColor: "var(--n-border)", color: "#ef4444" }}
       >
         <Plus size={16} />
       </button>
@@ -512,12 +513,14 @@ export default function ShopPage() {
                     )}
 
                     <div className="mt-3 flex items-center gap-2">
-                      <QuantitySelector
-                        value={qty}
-                        onChange={(v) => setQty(item.id, v)}
-                        min={1}
-                        max={maxQty}
-                      />
+                      {maxQty > 1 && (
+                        <QuantitySelector
+                          value={qty}
+                          onChange={(v) => setQty(item.id, v)}
+                          min={1}
+                          max={maxQty}
+                        />
+                      )}
                       <button
                         onClick={() => handlePurchase(item)}
                         disabled={!canBuy || purchasing === item.id || (gift && !recipient)}
