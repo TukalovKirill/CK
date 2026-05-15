@@ -8,7 +8,6 @@ import AcceptInvitePage from "./pages/AcceptInvitePage";
 import ProfilePage from "./pages/ProfilePage";
 import TeamPage from "./pages/TeamPage";
 import CompanySettingsPage from "./pages/CompanySettingsPage";
-import ZonesPage from "./pages/ZonesPage";
 import TextbooksPage from "./pages/TextbooksPage";
 import TextbookCardPage from "./pages/TextbookCardPage";
 import TextbookManagePage from "./pages/TextbookManagePage";
@@ -39,7 +38,6 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/team" element={<RequirePermission code="team.view"><TeamPage /></RequirePermission>} />
           <Route path="/company-settings" element={<RequirePermission code="org.view"><CompanySettingsPage /></RequirePermission>} />
-          <Route path="/zones" element={<RequirePermission code="org.view"><ZonesPage /></RequirePermission>} />
           <Route path="/textbooks" element={<RequirePermission code="textbooks.view"><TextbooksPage /></RequirePermission>} />
           <Route path="/textbooks/card/:id" element={<RequirePermission code="textbooks.view"><TextbookCardPage /></RequirePermission>} />
           <Route path="/textbooks/manage" element={<RequirePermission code="textbooks.edit"><TextbookManagePage /></RequirePermission>} />

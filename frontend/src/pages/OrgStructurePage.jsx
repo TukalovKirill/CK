@@ -3,7 +3,6 @@ import {
     getUnits, createUnit, updateUnit, deleteUnit, reorderUnits,
     getDepartments, createDepartment, updateDepartment, deleteDepartment, reorderDepartments,
     getOrgRoles, createOrgRole, updateOrgRole, deleteOrgRole, getOrgPermissions,
-    getZones, createZone, deleteZone,
 } from "../api/org";
 import { useAuth, hasPermission } from "../context/AuthContext";
 import useRealtimeUpdates from "../hooks/useRealtimeUpdates";
@@ -55,7 +54,6 @@ export default function OrgStructurePage() {
     const [units, setUnits] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [roles, setRoles] = useState([]);
-    const [zones, setZones] = useState([]);
     const [permissions, setPermissions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState({});
@@ -63,21 +61,19 @@ export default function OrgStructurePage() {
     const [newUnit, setNewUnit] = useState("");
     const [newDept, setNewDept] = useState({ unit: "", name: "" });
     const [newRole, setNewRole] = useState({ title: "", department: "", parent_role: "" });
-    const [newZone, setNewZone] = useState({ department: "", org_role: "", name: "" });
 
     const [roleModal, setRoleModal] = useState(null);
     const [rolePerms, setRolePerms] = useState([]);
 
     const loadAll = useCallback(async () => {
         try {
-            const fetches = [getUnits(), getDepartments(), getOrgRoles(), getZones()];
+            const fetches = [getUnits(), getDepartments(), getOrgRoles()];
             if (canManageRoles) fetches.push(getOrgPermissions());
             const results = await Promise.all(fetches);
             setUnits(results[0].data);
             setDepartments(results[1].data);
             setRoles(results[2].data);
-            setZones(results[3].data);
-            if (results[4]) setPermissions(results[4].data);
+            if (results[3]) setPermissions(results[3].data);
         } catch {
             toast.error("Ошибка загрузки");
         } finally {
@@ -150,21 +146,6 @@ export default function OrgStructurePage() {
                 parent_role: newRole.parent_role || null,
             });
             setNewRole({ title: "", department: "", parent_role: "" });
-            loadAll();
-        } catch {
-            toast.error("Ошибка");
-        }
-    };
-
-    const handleAddZone = async () => {
-        if (!newZone.name.trim() || !newZone.department || !newZone.org_role) return;
-        try {
-            await createZone({
-                name: newZone.name,
-                department: newZone.department,
-                org_role: newZone.org_role,
-            });
-            setNewZone({ department: "", org_role: "", name: "" });
             loadAll();
         } catch {
             toast.error("Ошибка");
@@ -254,7 +235,6 @@ export default function OrgStructurePage() {
                                                                 <div ref={dProv.innerRef} {...dProv.droppableProps} className="px-3 pb-2 pl-8 space-y-1">
                                                                     {unitDepts.map((dept, dIdx) => {
                                                                         const deptRoles = roles.filter((r) => r.department === dept.id);
-                                                                        const deptZones = zones.filter((z) => z.department === dept.id);
                                                                         return (
                                                                             <Draggable key={dept.id} draggableId={`dept-${dept.id}`} index={dIdx} isDragDisabled={!canManage}>
                                                                                 {(dp) => (
@@ -310,23 +290,6 @@ export default function OrgStructurePage() {
                                                                                             </div>
                                                                                         )}
 
-                                                                                        {deptZones.length > 0 && (
-                                                                                            <div className="mt-2 pl-2 border-l border-gray-200">
-                                                                                                <span className="text-xs text-gray-500">Зоны:</span>
-                                                                                                <div className="flex flex-wrap gap-1 mt-0.5">
-                                                                                                    {deptZones.map((z) => (
-                                                                                                        <span key={z.id} className="inline-flex items-center gap-1 text-xs border border-dashed border-gray-300 px-1.5 py-0.5">
-                                                                                                            {z.name}
-                                                                                                            {canManage && (
-                                                                                                                <button onClick={() => deleteZone(z.id).then(loadAll).catch(() => toast.error("Ошибка"))}>
-                                                                                                                    <X size={10} className="text-gray-400" />
-                                                                                                                </button>
-                                                                                                            )}
-                                                                                                        </span>
-                                                                                                    ))}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        )}
                                                                                     </div>
                                                                                 )}
                                                                             </Draggable>
@@ -422,35 +385,6 @@ export default function OrgStructurePage() {
                         </button>
                     </div>
 
-                    <div className="flex gap-2 items-end">
-                        <label>
-                            <span className="text-xs text-gray-600">Департамент</span>
-                            <select value={newZone.department} onChange={(e) => setNewZone({ ...newZone, department: e.target.value })} className="border border-gray-300 px-2 py-1 text-sm w-full">
-                                <option value="">—</option>
-                                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                            </select>
-                        </label>
-                        <label>
-                            <span className="text-xs text-gray-600">Роль</span>
-                            <select value={newZone.org_role} onChange={(e) => setNewZone({ ...newZone, org_role: e.target.value })} className="border border-gray-300 px-2 py-1 text-sm w-full">
-                                <option value="">—</option>
-                                {roles.filter((r) => !r.is_system).map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
-                            </select>
-                        </label>
-                        <label className="flex-1">
-                            <span className="text-xs text-gray-600">Зона</span>
-                            <input
-                                value={newZone.name}
-                                onChange={(e) => setNewZone({ ...newZone, name: e.target.value })}
-                                onKeyDown={(e) => e.key === "Enter" && handleAddZone()}
-                                className="border border-gray-300 px-2 py-1 text-sm w-full"
-                                placeholder="Название"
-                            />
-                        </label>
-                        <button onClick={handleAddZone} className="border border-gray-400 px-2 py-1 text-sm hover:bg-gray-50">
-                            <Plus size={14} />
-                        </button>
-                    </div>
                 </div>
             )}
 

@@ -6,7 +6,8 @@ import { ChevronDown } from "lucide-react";
 import {
   TextbookIcon, QuizIcon, ShopIcon, CompanyIcon, ProfileIcon,
   EyeIcon, PencilIcon, FileTextIcon, BarChartIcon, SlidersIcon,
-  OrgChartIcon, UsersIcon, MapPinIcon,
+  LayoutGridIcon, ClockIcon, WalletIcon, ClipboardListIcon,
+  OrgChartIcon, UsersIcon,
 } from "./Icons";
 
 const NAV_GROUPS = [
@@ -33,8 +34,13 @@ const NAV_GROUPS = [
     key: "shop",
     label: "Магазин",
     icon: ShopIcon,
-    to: "/shop",
-    permission: "shop.view",
+    links: [
+      { to: "/shop", label: "Витрина", icon: LayoutGridIcon, permission: "shop.view" },
+      { to: "/shop/history", label: "История", icon: ClockIcon, permission: "shop.view" },
+      { to: "/shop/manage", label: "Управление", icon: PencilIcon, permission: "shop.edit" },
+      { to: "/shop/coins", label: "Коины", icon: WalletIcon, permission: "shop.manage_coins" },
+      { to: "/shop/orders", label: "Заказы", icon: ClipboardListIcon, permission: "shop.manage_orders" },
+    ],
   },
   {
     key: "company",
@@ -43,7 +49,6 @@ const NAV_GROUPS = [
     links: [
       { to: "/company-settings", label: "Оргструктура", icon: OrgChartIcon, permission: "org.view" },
       { to: "/team", label: "Команда", icon: UsersIcon, permission: "team.view" },
-      { to: "/zones", label: "Зоны", icon: MapPinIcon, permission: "org.view" },
     ],
   },
 ];

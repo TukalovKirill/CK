@@ -24,8 +24,3 @@ export const getEmployee = (id) => axiosInstance.get(`employees/${id}/`);
 export const deleteEmployee = (id) => axiosInstance.delete(`employees/${id}/`);
 
 export const getOrgPermissions = () => axiosInstance.get("org-permissions/");
-
-export const getZones = (params) => axiosInstance.get("zones/", { params });
-export const createZone = (data) => axiosInstance.post("zones/", data);
-export const updateZone = (id, data) => axiosInstance.patch(`zones/${id}/`, data);
-export const deleteZone = (id) => axiosInstance.delete(`zones/${id}/`);
