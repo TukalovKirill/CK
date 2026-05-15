@@ -37,12 +37,8 @@ class CompanyUpdatesConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def broadcast_message(self, event):
-        await self.send(text_data=json.dumps({
-            "entity": event.get("entity"),
-            "action": event.get("action"),
-            "id": event.get("id"),
-            "user_id": event.get("user_id"),
-        }))
+        payload = {k: v for k, v in event.items() if k != "type"}
+        await self.send(text_data=json.dumps(payload, default=str))
 
     @database_sync_to_async
     def _get_company_id(self, user_id):

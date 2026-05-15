@@ -171,11 +171,16 @@ export default function ShopManagePage() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold truncate">{item.name}</h3>
                       {!item.is_active && (
                         <span className="text-xs px-2 py-0.5 rounded" style={{ background: "var(--n-hover)", color: "var(--n-muted)" }}>
                           Скрыт
+                        </span>
+                      )}
+                      {item.stock_quantity === 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded" style={{ background: "#fef2f2", color: "#ef4444" }}>
+                          Нет в наличии
                         </span>
                       )}
                     </div>

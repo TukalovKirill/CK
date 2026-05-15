@@ -6,6 +6,7 @@ from .views import (
     CoinBalanceView,
     CoinBulkAccrueView,
     CoinTransactionViewSet,
+    DepartmentColleaguesView,
     OrderViewSet,
     PurchasedItemViewSet,
     RefundRequestViewSet,
@@ -29,5 +30,6 @@ urlpatterns = [
     path("balance/", CoinBalanceView.as_view()),
     path("coins/accrue/", CoinAccrueView.as_view()),
     path("coins/bulk-accrue/", CoinBulkAccrueView.as_view()),
+    path("department-colleagues/", DepartmentColleaguesView.as_view()),
     path("aml/", include("apps.shop.aml.urls")),
 ] + router.urls

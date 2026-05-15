@@ -3,8 +3,12 @@ import { Outlet } from "react-router-dom";
 import Topbar from "./Topbar";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
+import { useAuth } from "../context/AuthContext";
+import { useRealtimeContext } from "../context/RealtimeContext";
 
 export default function Layout() {
+  const { user, updateCoinBalance } = useAuth();
+  const { subscribe } = useRealtimeContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -14,6 +18,15 @@ export default function Layout() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    return subscribe((data) => {
+      if (data.entity === "coin_balance" && data.target_user_id === user.id) {
+        updateCoinBalance(data.balance);
+      }
+    });
+  }, [subscribe, user?.id, updateCoinBalance]);
 
   const toggleSidebar = () => {
     if (isMobile) {

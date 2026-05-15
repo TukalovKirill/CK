@@ -404,6 +404,7 @@ export default function OrgStructurePage() {
                                             onChange={() => togglePerm(p.id)}
                                         />
                                         <span>{p.name}</span>
+                                        {p.is_default && <span className="text-xs text-blue-500 font-medium">(базовое)</span>}
                                         {p.description && <span className="text-xs text-gray-400">— {p.description}</span>}
                                     </label>
                                 ))}

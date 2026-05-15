@@ -60,12 +60,19 @@ export const rejectOrder = (id) => axiosInstance.post(`${BASE}orders/${id}/rejec
 // My Items
 export const getMyItems = () => axiosInstance.get(`${BASE}my-items/`);
 export const activateItem = (id) => axiosInstance.post(`${BASE}my-items/${id}/activate/`);
+export const activateByItem = (data) => axiosInstance.post(`${BASE}my-items/activate-by-item/`, data);
 
 // Refunds
 export const getRefunds = (params) => axiosInstance.get(`${BASE}refunds/`, { params });
 export const createRefund = (data) => axiosInstance.post(`${BASE}refunds/`, data);
 export const approveRefund = (id) => axiosInstance.post(`${BASE}refunds/${id}/approve/`);
 export const rejectRefund = (id) => axiosInstance.post(`${BASE}refunds/${id}/reject/`);
+
+// Department Colleagues
+export const getDepartmentColleagues = () => axiosInstance.get(`${BASE}department-colleagues/`);
+
+// Gift existing item
+export const giftItem = (id, data) => axiosInstance.post(`${BASE}my-items/${id}/gift/`, data);
 
 // Assignments
 export const getAssignments = (params) => axiosInstance.get(`${BASE}assignments/`, { params });

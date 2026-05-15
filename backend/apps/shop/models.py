@@ -162,6 +162,10 @@ class Order(models.Model):
     employee = models.ForeignKey(
         "core.Employee", verbose_name="Сотрудник", on_delete=CASCADE, related_name="shop_orders"
     )
+    recipient = models.ForeignKey(
+        "core.Employee", verbose_name="Получатель подарка", on_delete=SET_NULL,
+        null=True, blank=True, related_name="gift_orders",
+    )
     company = models.ForeignKey(
         "core.Company", verbose_name="Компания", on_delete=CASCADE, related_name="shop_orders"
     )

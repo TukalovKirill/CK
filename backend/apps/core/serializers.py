@@ -17,6 +17,12 @@ from .models import (
 
 User = get_user_model()
 
+DEFAULT_PERMISSION_CODES = frozenset([
+    "shop.view",
+    "textbooks.view",
+    "quizzes.take",
+])
+
 
 # --- User ---
 
@@ -206,6 +212,7 @@ class DepartmentOrgSerializer(serializers.ModelSerializer):
 class OrgPermissionListSerializer(serializers.ModelSerializer):
     domain = serializers.SerializerMethodField()
     domain_label = serializers.SerializerMethodField()
+    is_default = serializers.SerializerMethodField()
 
     DOMAIN_LABELS = {
         "org": "Структура компании",
@@ -217,7 +224,7 @@ class OrgPermissionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrgPermission
-        fields = ("id", "code", "name", "description", "domain", "domain_label")
+        fields = ("id", "code", "name", "description", "domain", "domain_label", "is_default")
 
     def get_domain(self, obj):
         return obj.code.split(".")[0] if "." in obj.code else obj.code
@@ -225,6 +232,9 @@ class OrgPermissionListSerializer(serializers.ModelSerializer):
     def get_domain_label(self, obj):
         domain = obj.code.split(".")[0] if "." in obj.code else obj.code
         return self.DOMAIN_LABELS.get(domain, domain)
+
+    def get_is_default(self, obj):
+        return obj.code in DEFAULT_PERMISSION_CODES
 
 
 # --- OrgRole ---
@@ -307,7 +317,7 @@ class OrgRoleCreateSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        perms = validated_data.pop("permissions", [])
+        perms = validated_data.pop("permissions", None)
         request = self.context.get("request")
         validated_data["company"] = request.user.company
         base_code = slugify(validated_data["title"], allow_unicode=False) or "role"
@@ -319,8 +329,11 @@ class OrgRoleCreateSerializer(serializers.ModelSerializer):
             counter += 1
         validated_data["code"] = code
         instance = super().create(validated_data)
-        if perms:
+        if perms is not None:
             instance.permissions.set(perms)
+        else:
+            default_perms = OrgPermission.objects.filter(code__in=DEFAULT_PERMISSION_CODES)
+            instance.permissions.set(default_perms)
         return instance
 
 

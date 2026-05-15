@@ -166,6 +166,7 @@ class ShopItemWriteSerializer(CompanyScopedCreateMixin, serializers.ModelSeriali
 
 class OrderSerializer(serializers.ModelSerializer):
     employee_name = serializers.CharField(source="employee.full_name", read_only=True)
+    recipient_name = serializers.SerializerMethodField()
     item_name = serializers.SerializerMethodField()
     item_photo_url = serializers.SerializerMethodField()
     reviewed_by_name = serializers.SerializerMethodField()
@@ -173,13 +174,17 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            "id", "employee", "employee_name", "item", "item_name",
-            "item_photo_url", "quantity", "total_price", "status",
-            "reviewed_by", "reviewed_by_name", "reviewed_at", "created_at",
+            "id", "employee", "employee_name", "recipient", "recipient_name",
+            "item", "item_name", "item_photo_url", "quantity", "total_price",
+            "status", "reviewed_by", "reviewed_by_name", "reviewed_at", "created_at",
         )
         read_only_fields = (
-            "employee", "total_price", "status", "reviewed_by", "reviewed_at", "created_at",
+            "employee", "recipient", "total_price", "status",
+            "reviewed_by", "reviewed_at", "created_at",
         )
+
+    def get_recipient_name(self, obj):
+        return obj.recipient.full_name if obj.recipient else None
 
     def get_item_name(self, obj):
         return obj.item.name if obj.item else None
@@ -204,6 +209,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class CreateOrderSerializer(serializers.Serializer):
     item_id = serializers.IntegerField()
     quantity = serializers.IntegerField(min_value=1, default=1)
+    recipient_id = serializers.IntegerField(required=False, allow_null=True, default=None)
 
 
 # --- Purchased Items ---
@@ -323,3 +329,15 @@ class ShopItemAssignmentWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItemAssignment
         fields = ("item", "unit", "department", "org_role")
+
+
+class GiftItemSerializer(serializers.Serializer):
+    recipient_id = serializers.IntegerField()
+    quantity = serializers.IntegerField(min_value=1, default=1)
+
+
+class DepartmentColleagueSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    full_name = serializers.CharField()
+    department_id = serializers.IntegerField(allow_null=True)
+    department_name = serializers.CharField(allow_null=True)

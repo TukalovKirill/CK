@@ -32,6 +32,31 @@ from .permissions import (
     CanManageOrders,
     CanViewShop,
 )
+
+
+def _broadcast_balance(company_id, employee):
+    user_id = getattr(employee, "user_id", None)
+    if not user_id or not company_id:
+        return
+    balance_obj = getattr(employee, "coin_balance", None)
+    if balance_obj is None:
+        return
+    from channels.layers import get_channel_layer
+    from asgiref.sync import async_to_sync
+
+    try:
+        async_to_sync(get_channel_layer().group_send)(
+            f"company_{company_id}_updates",
+            {
+                "type": "broadcast_message",
+                "entity": "coin_balance",
+                "action": "updated",
+                "target_user_id": user_id,
+                "balance": balance_obj.balance,
+            },
+        )
+    except Exception:
+        pass
 from .serializers import (
     AccrueCoinsSerializer,
     BulkAccrueCoinsSerializer,
@@ -39,6 +64,8 @@ from .serializers import (
     CoinTransactionSerializer,
     CreateOrderSerializer,
     CreateRefundRequestSerializer,
+    DepartmentColleagueSerializer,
+    GiftItemSerializer,
     ItemActivationSerializer,
     OrderSerializer,
     PurchasedItemSerializer,
@@ -52,6 +79,59 @@ from .serializers import (
     ShopItemWriteSerializer,
     ShopSettingsSerializer,
 )
+
+
+def _get_employee_department_ids(employee):
+    from apps.core.models import EmployeeAssignment
+    return set(
+        EmployeeAssignment.objects.filter(
+            employee=employee, department__isnull=False,
+        ).values_list("department_id", flat=True)
+    )
+
+
+def _share_department(emp_a, emp_b):
+    dept_a = _get_employee_department_ids(emp_a)
+    dept_b = _get_employee_department_ids(emp_b)
+    return bool(dept_a & dept_b)
+
+
+# --- Department Colleagues ---
+
+class DepartmentColleaguesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        emp = getattr(request.user, "employee_profile", None)
+        if not emp:
+            return Response([])
+
+        dept_ids = _get_employee_department_ids(emp)
+        if not dept_ids:
+            return Response([])
+
+        from apps.core.models import EmployeeAssignment
+        colleague_assignments = (
+            EmployeeAssignment.objects
+            .filter(department_id__in=dept_ids)
+            .exclude(employee=emp)
+            .select_related("employee", "department")
+        )
+        seen = set()
+        result = []
+        for ea in colleague_assignments:
+            if ea.employee_id in seen:
+                continue
+            seen.add(ea.employee_id)
+            result.append({
+                "id": ea.employee_id,
+                "full_name": ea.employee.full_name,
+                "department_id": ea.department_id,
+                "department_name": ea.department.name if ea.department else None,
+            })
+        result.sort(key=lambda x: x["full_name"])
+        serializer = DepartmentColleagueSerializer(result, many=True)
+        return Response(serializer.data)
 
 
 # --- Settings ---
@@ -288,6 +368,7 @@ class CoinAccrueView(APIView):
         )
         balance_obj.balance += amount
         balance_obj.save(update_fields=["balance", "updated_at"])
+        _broadcast_balance(request.user.company_id, employee)
 
         CoinTransaction.objects.create(
             employee=employee,
@@ -343,6 +424,7 @@ class CoinBulkAccrueView(APIView):
             )
             balance_obj.balance += amount
             balance_obj.save(update_fields=["balance", "updated_at"])
+            _broadcast_balance(request.user.company_id, employee)
 
             CoinTransaction.objects.create(
                 employee=employee,
@@ -443,12 +525,34 @@ class OrderViewSet(BroadcastMixin, viewsets.ModelViewSet):
 
         item_id = serializer.validated_data["item_id"]
         quantity = serializer.validated_data["quantity"]
+        recipient_id = serializer.validated_data.get("recipient_id")
 
         emp = getattr(request.user, "employee_profile", None)
         if not emp:
             return Response(
                 {"detail": "Профиль сотрудника не найден"}, status=status.HTTP_400_BAD_REQUEST
             )
+
+        recipient = None
+        if recipient_id:
+            from apps.core.models import Employee
+            try:
+                recipient = Employee.objects.get(
+                    pk=recipient_id, company=request.user.company,
+                )
+            except Employee.DoesNotExist:
+                return Response(
+                    {"detail": "Получатель не найден"}, status=status.HTTP_404_NOT_FOUND
+                )
+            if recipient.pk == emp.pk:
+                return Response(
+                    {"detail": "Нельзя подарить самому себе"}, status=status.HTTP_400_BAD_REQUEST
+                )
+            if not _share_department(emp, recipient):
+                return Response(
+                    {"detail": "Можно дарить только сотрудникам своего подразделения"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         try:
             item = ShopItem.objects.get(
@@ -484,9 +588,13 @@ class OrderViewSet(BroadcastMixin, viewsets.ModelViewSet):
 
         balance_obj.balance -= total_price
         balance_obj.save(update_fields=["balance", "updated_at"])
+        _broadcast_balance(request.user.company_id, emp)
+
+        item_owner = recipient if recipient else emp
 
         order = Order.objects.create(
             employee=emp,
+            recipient=recipient,
             company=request.user.company,
             item=item,
             quantity=quantity,
@@ -494,12 +602,16 @@ class OrderViewSet(BroadcastMixin, viewsets.ModelViewSet):
             status=order_status,
         )
 
+        comment = f"Покупка: {item.name} x{quantity}"
+        if recipient:
+            comment = f"Подарок для {recipient.full_name}: {item.name} x{quantity}"
+
         CoinTransaction.objects.create(
             employee=emp,
             company=request.user.company,
             amount=-total_price,
             transaction_type=CoinTransaction.TransactionType.PURCHASE,
-            comment=f"Покупка: {item.name} x{quantity}",
+            comment=comment,
             related_order=order,
         )
 
@@ -508,7 +620,7 @@ class OrderViewSet(BroadcastMixin, viewsets.ModelViewSet):
                 item.stock_quantity -= quantity
                 item.save(update_fields=["stock_quantity"])
             PurchasedItem.objects.create(
-                employee=emp,
+                employee=item_owner,
                 company=request.user.company,
                 order=order,
                 item=item,
@@ -564,8 +676,9 @@ class OrderViewSet(BroadcastMixin, viewsets.ModelViewSet):
             order.item.stock_quantity -= order.quantity
             order.item.save(update_fields=["stock_quantity"])
 
+        item_owner = order.recipient if order.recipient else order.employee
         PurchasedItem.objects.create(
-            employee=order.employee,
+            employee=item_owner,
             company=order.company,
             order=order,
             item=order.item,
@@ -599,6 +712,7 @@ class OrderViewSet(BroadcastMixin, viewsets.ModelViewSet):
         )
         balance_obj.balance += order.total_price
         balance_obj.save(update_fields=["balance", "updated_at"])
+        _broadcast_balance(order.company_id, order.employee)
 
         CoinTransaction.objects.create(
             employee=order.employee,
@@ -662,6 +776,128 @@ class PurchasedItemViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response(PurchasedItemSerializer(purchased_item, context={"request": request}).data)
 
+    @action(detail=False, methods=["post"], url_path="activate-by-item")
+    @transaction.atomic
+    def activate_by_item(self, request):
+        item_id = request.data.get("item_id")
+        try:
+            quantity = int(request.data.get("quantity", 1))
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Некорректное количество"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if quantity < 1:
+            return Response(
+                {"detail": "Количество должно быть не менее 1"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        emp = getattr(request.user, "employee_profile", None)
+        if not emp:
+            return Response(
+                {"detail": "Профиль сотрудника не найден"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        purchased_items = list(
+            PurchasedItem.objects.select_for_update().filter(
+                employee=emp, item_id=item_id, is_fully_activated=False
+            ).order_by("created_at")
+        )
+
+        total_remaining = sum(pi.quantity_remaining for pi in purchased_items)
+        if total_remaining < quantity:
+            return Response(
+                {"detail": "Недостаточно доступных активаций"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        remaining_to_activate = quantity
+        for pi in purchased_items:
+            if remaining_to_activate <= 0:
+                break
+            can_activate = min(pi.quantity_remaining, remaining_to_activate)
+            pi.quantity_remaining -= can_activate
+            if pi.quantity_remaining == 0:
+                pi.is_fully_activated = True
+            pi.save(update_fields=["quantity_remaining", "is_fully_activated"])
+            ItemActivation.objects.bulk_create([
+                ItemActivation(purchased_item=pi, employee=emp)
+                for _ in range(can_activate)
+            ])
+            remaining_to_activate -= can_activate
+
+        item_name = purchased_items[0].item.name if purchased_items and purchased_items[0].item else ""
+        self._broadcast_activation_bulk(item_id, item_name, quantity, emp)
+
+        all_items = PurchasedItem.objects.filter(employee=emp).select_related("item")
+        return Response(PurchasedItemSerializer(all_items, many=True, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def gift(self, request, pk=None):
+        serializer = GiftItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        recipient_id = serializer.validated_data["recipient_id"]
+        quantity = serializer.validated_data["quantity"]
+
+        emp = getattr(request.user, "employee_profile", None)
+        if not emp:
+            return Response(
+                {"detail": "Профиль сотрудника не найден"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        purchased_item = self.get_object()
+
+        if purchased_item.is_fully_activated:
+            return Response(
+                {"detail": "Товар полностью активирован"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if purchased_item.quantity_remaining < quantity:
+            return Response(
+                {"detail": "Недостаточно доступных единиц для передачи"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from apps.core.models import Employee
+        try:
+            recipient = Employee.objects.get(
+                pk=recipient_id, company=request.user.company,
+            )
+        except Employee.DoesNotExist:
+            return Response(
+                {"detail": "Получатель не найден"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if recipient.pk == emp.pk:
+            return Response(
+                {"detail": "Нельзя подарить самому себе"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not _share_department(emp, recipient):
+            return Response(
+                {"detail": "Можно дарить только сотрудникам своего подразделения"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        purchased_item.quantity_remaining -= quantity
+        if purchased_item.quantity_remaining == 0:
+            purchased_item.is_fully_activated = True
+        purchased_item.save(update_fields=["quantity_remaining", "is_fully_activated"])
+
+        PurchasedItem.objects.create(
+            employee=recipient,
+            company=request.user.company,
+            order=purchased_item.order,
+            item=purchased_item.item,
+            quantity_remaining=quantity,
+        )
+
+        all_items = PurchasedItem.objects.filter(employee=emp).select_related("item")
+        return Response(
+            PurchasedItemSerializer(all_items, many=True, context={"request": request}).data
+        )
+
     def _broadcast_activation(self, purchased_item, emp):
         from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
@@ -676,6 +912,30 @@ class PurchasedItemViewSet(viewsets.ReadOnlyModelViewSet):
             "sub_type": "shop_item_activated",
             "employee_name": emp.full_name if emp else "",
             "item_name": purchased_item.item.name if purchased_item.item else "",
+            "user_id": self.request.user.pk,
+        }
+        try:
+            async_to_sync(channel_layer.group_send)(
+                f"company_{company_id}_updates", message
+            )
+        except Exception:
+            pass
+
+    def _broadcast_activation_bulk(self, item_id, item_name, quantity, emp):
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+
+        company_id = self.request.user.company_id
+        channel_layer = get_channel_layer()
+        message = {
+            "type": "broadcast_message",
+            "entity": "shop_item_activation",
+            "action": "created",
+            "id": item_id,
+            "sub_type": "shop_item_activated",
+            "employee_name": emp.full_name if emp else "",
+            "item_name": item_name,
+            "quantity": quantity,
             "user_id": self.request.user.pk,
         }
         try:
@@ -831,6 +1091,7 @@ class RefundRequestViewSet(BroadcastMixin, viewsets.ModelViewSet):
         )
         balance_obj.balance += refund_req.refund_amount
         balance_obj.save(update_fields=["balance", "updated_at"])
+        _broadcast_balance(refund_req.company_id, refund_req.employee)
 
         CoinTransaction.objects.create(
             employee=refund_req.employee,

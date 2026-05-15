@@ -54,8 +54,12 @@ export function AuthProvider({ children }) {
     setLoading(false);
   };
 
+  const updateCoinBalance = (newBalance) => {
+    setUser((prev) => prev ? { ...prev, coin_balance: newBalance } : prev);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, reloadMe }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, reloadMe, updateCoinBalance }}>
       {children}
     </AuthContext.Provider>
   );
