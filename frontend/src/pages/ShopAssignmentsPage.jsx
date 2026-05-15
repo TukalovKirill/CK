@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
     getAssignments, createAssignment, deleteAssignment, bulkDeleteAssignments,
     getItems, getCategories,
@@ -12,7 +11,7 @@ import Dropdown from "../components/Dropdown";
 import { useDialog } from "../components/DialogProvider";
 import toast from "react-hot-toast";
 import {
-    ArrowLeft, ChevronRight, ChevronDown, Plus, Trash2, Search, Check,
+    ChevronRight, ChevronDown, Plus, Trash2, Search, Check,
     Building2, FolderClosed, Shield,
 } from "lucide-react";
 
@@ -149,24 +148,11 @@ export default function ShopAssignmentsPage() {
     }
 
     if (loading) {
-        return (
-            <div className="page-shell page-stack">
-                <div className="surface-empty">Загрузка...</div>
-            </div>
-        );
+        return <div className="surface-empty">Загрузка...</div>;
     }
 
     return (
-        <div className="page-shell page-stack">
-            {/* Header */}
-            <Link to="/shop/manage" className="btn-ghost self-start">
-                <ArrowLeft size={16} /> Управление
-            </Link>
-            <div className="hero-banner">
-                <h1 className="page-title">Распределение товаров</h1>
-                <p className="page-subtitle mt-1">Настройка доступности товаров по юнитам</p>
-            </div>
-
+        <div className="space-y-4">
             {/* Filter toolbar */}
             <div className="surface-toolbar">
                 <Dropdown

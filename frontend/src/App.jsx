@@ -21,14 +21,11 @@ import QuizResultPage from "./pages/QuizResultPage";
 import QuizResultsPage from "./pages/QuizResultsPage";
 import QuizSettingsPage from "./pages/QuizSettingsPage";
 import ShopPage from "./pages/ShopPage";
-import ShopMyItemsPage from "./pages/ShopMyItemsPage";
 import ShopHistoryPage from "./pages/ShopHistoryPage";
 import ShopManagePage from "./pages/ShopManagePage";
 import ShopItemEditPage from "./pages/ShopItemEditPage";
 import ShopCoinsPage from "./pages/ShopCoinsPage";
 import ShopOrdersPage from "./pages/ShopOrdersPage";
-import ShopAMLPage from "./pages/ShopAMLPage";
-import ShopAssignmentsPage from "./pages/ShopAssignmentsPage";
 
 export default function App() {
   return (
@@ -56,15 +53,12 @@ export default function App() {
           <Route path="/quizzes/results" element={<RequirePermission code="quizzes.view_stats"><QuizResultsPage /></RequirePermission>} />
           <Route path="/quizzes/settings" element={<RequirePermission code="quizzes.manage_templates"><QuizSettingsPage /></RequirePermission>} />
           <Route path="/shop" element={<RequirePermission code="shop.view"><ShopPage /></RequirePermission>} />
-          <Route path="/shop/my-items" element={<RequirePermission code="shop.view"><ShopMyItemsPage /></RequirePermission>} />
           <Route path="/shop/history" element={<RequirePermission code="shop.view"><ShopHistoryPage /></RequirePermission>} />
           <Route path="/shop/manage" element={<RequirePermission code="shop.edit"><ShopManagePage /></RequirePermission>} />
           <Route path="/shop/manage/item/new" element={<RequirePermission code="shop.edit"><ShopItemEditPage /></RequirePermission>} />
           <Route path="/shop/manage/item/:id/edit" element={<RequirePermission code="shop.edit"><ShopItemEditPage /></RequirePermission>} />
-          <Route path="/shop/assignments" element={<RequirePermission code="shop.edit"><ShopAssignmentsPage /></RequirePermission>} />
           <Route path="/shop/coins" element={<RequirePermission code="shop.manage_coins"><ShopCoinsPage /></RequirePermission>} />
           <Route path="/shop/orders" element={<RequirePermission code="shop.manage_orders"><ShopOrdersPage /></RequirePermission>} />
-          <Route path="/shop/aml" element={<RequirePermission code="shop.review_flagged"><ShopAMLPage /></RequirePermission>} />
         </Route>
       </Route>
 

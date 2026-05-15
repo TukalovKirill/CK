@@ -6,8 +6,7 @@ import { ChevronDown } from "lucide-react";
 import {
   TextbookIcon, QuizIcon, ShopIcon, CompanyIcon, ProfileIcon,
   EyeIcon, PencilIcon, FileTextIcon, BarChartIcon, SlidersIcon,
-  LayoutGridIcon, PackageIcon, ClockIcon, ShareIcon, WalletIcon,
-  ClipboardListIcon, ShieldIcon, OrgChartIcon, UsersIcon, MapPinIcon,
+  OrgChartIcon, UsersIcon, MapPinIcon,
 } from "./Icons";
 
 const NAV_GROUPS = [
@@ -34,16 +33,8 @@ const NAV_GROUPS = [
     key: "shop",
     label: "Магазин",
     icon: ShopIcon,
-    links: [
-      { to: "/shop", label: "Витрина", icon: LayoutGridIcon, permission: "shop.view" },
-      { to: "/shop/my-items", label: "Мои товары", icon: PackageIcon, permission: "shop.view" },
-      { to: "/shop/history", label: "История", icon: ClockIcon, permission: "shop.view" },
-      { to: "/shop/manage", label: "Управление", icon: PencilIcon, permission: "shop.edit" },
-      { to: "/shop/assignments", label: "Распределение", icon: ShareIcon, permission: "shop.edit" },
-      { to: "/shop/coins", label: "Коины", icon: WalletIcon, permission: "shop.manage_coins" },
-      { to: "/shop/orders", label: "Заказы", icon: ClipboardListIcon, permission: "shop.manage_orders" },
-      { to: "/shop/aml", label: "AML", icon: ShieldIcon, permission: "shop.review_flagged" },
-    ],
+    to: "/shop",
+    permission: "shop.view",
   },
   {
     key: "company",
@@ -220,14 +211,27 @@ export default function Sidebar({ open, collapsed, onNavigate }) {
         }}
       >
         <nav className="flex-1 p-2 space-y-1">
-          {NAV_GROUPS.map((group) => (
-            <GroupAccordion
-              key={group.key}
-              group={group}
-              collapsed={collapsed}
-              onNavigate={onNavigate}
-            />
-          ))}
+          {NAV_GROUPS.map((group) =>
+            group.to ? (
+              (!group.permission || hasPermission(user, group.permission)) && (
+                <NavItem
+                  key={group.key}
+                  to={group.to}
+                  label={group.label}
+                  icon={group.icon}
+                  collapsed={collapsed}
+                  onClick={onNavigate}
+                />
+              )
+            ) : (
+              <GroupAccordion
+                key={group.key}
+                group={group}
+                collapsed={collapsed}
+                onNavigate={onNavigate}
+              />
+            ),
+          )}
 
           <div className="my-2" style={{ borderTop: "1px solid var(--n-border)" }} />
 

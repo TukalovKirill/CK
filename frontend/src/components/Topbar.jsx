@@ -36,8 +36,8 @@ export default function Topbar({ onToggleSidebar }) {
         <button
           className="w-10 h-10 flex items-center justify-center rounded-lg btn-ghost relative"
           style={{ padding: 0 }}
-          onClick={() => navigate("/shop/aml")}
-          title="AML Мониторинг"
+          onClick={() => navigate("/shop/coins?tab=aml")}
+          title="Подозрительные операции"
         >
           <Bell size={28} strokeWidth={2} />
           {pendingCount > 0 && (
