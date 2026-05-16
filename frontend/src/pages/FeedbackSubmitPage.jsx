@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { getUnits } from "../api/org";
-import { submitWish } from "../api/feedback";
+import { getMyUnitsForWish, submitWish } from "../api/feedback";
 import { Send, CheckCircle } from "lucide-react";
 import Dropdown from "../components/Dropdown";
 import Spinner from "../components/Spinner";
@@ -16,8 +15,8 @@ export default function FeedbackSubmitPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getUnits().then((r) => {
-      const list = r.data?.results ?? r.data ?? [];
+    getMyUnitsForWish().then((r) => {
+      const list = r.data ?? [];
       setUnits(list);
       if (list.length === 1) setUnitId(String(list[0].id));
     });

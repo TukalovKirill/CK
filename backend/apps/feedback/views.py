@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from apps.core.mixins import BroadcastMixin
-from apps.core.models import Unit
+from apps.core.models import EmployeeAssignment, Unit
 from apps.core.permissions import (
     _is_full_access,
     get_user_unit_ids,
@@ -49,6 +49,18 @@ class StaffWishViewSet(BroadcastMixin, ListModelMixin, CreateModelMixin, Destroy
             qs = qs.filter(unit_id=unit_id)
 
         return qs.order_by("-created_at")
+
+    @action(detail=False, methods=["get"], url_path="my-units",
+            permission_classes=[IsAuthenticated, require_permission("feedback.submit_wish")])
+    def my_units(self, request):
+        user = request.user
+        if not user.company_id:
+            return Response([])
+        unit_ids = EmployeeAssignment.objects.filter(
+            employee__user=user,
+        ).values_list("unit_id", flat=True).distinct()
+        units = Unit.objects.filter(id__in=unit_ids, company=user.company).values("id", "name")
+        return Response(list(units))
 
     def create(self, request, *args, **kwargs):
         serializer = StaffWishSubmitSerializer(data=request.data)
