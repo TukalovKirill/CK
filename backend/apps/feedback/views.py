@@ -25,7 +25,7 @@ class StaffWishViewSet(BroadcastMixin, ListModelMixin, CreateModelMixin, Destroy
     broadcast_entity = "staff_wish"
 
     def get_permissions(self):
-        if self.action == "create":
+        if self.action in ("create", "my_units"):
             return [IsAuthenticated(), require_permission("feedback.submit_wish")()]
         if self.action == "destroy":
             return [IsAuthenticated(), require_permission("feedback.edit")()]
