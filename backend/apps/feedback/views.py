@@ -57,6 +57,12 @@ class StaffWishViewSet(BroadcastMixin, ListModelMixin, CreateModelMixin, Destroy
         data = serializer.validated_data
         user = request.user
 
+        if not user.company_id:
+            return Response(
+                {"detail": "Пользователь не привязан к компании."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
             unit = Unit.objects.get(id=data["unit_id"], company=user.company)
         except Unit.DoesNotExist:
