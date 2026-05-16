@@ -63,7 +63,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            "id", "email", "role", "company", "is_superuser",
+            "id", "email", "first_name", "last_name",
+            "role", "company", "is_superuser",
             "employee_id", "org_role_id", "org_role_code", "org_role_title",
             "permissions", "unit_permissions", "can_manage_permissions", "is_admin_role",
             "birth_date", "assignments", "coin_balance",

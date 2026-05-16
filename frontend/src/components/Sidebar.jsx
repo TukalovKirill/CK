@@ -10,7 +10,7 @@ import {
   OrgChartIcon, UsersIcon, FeedbackIcon, SendIcon, WishBoxIcon,
 } from "./Icons";
 
-const NAV_GROUPS = [
+export const NAV_GROUPS = [
   {
     key: "textbooks",
     label: "Учебники",

@@ -13,6 +13,8 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  const isAdmin = user?.is_admin_role || user?.permissions === null;
+
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
@@ -31,23 +33,26 @@ export default function Layout() {
   const toggleSidebar = () => {
     if (isMobile) {
       setSidebarOpen((o) => !o);
-    } else {
+    } else if (isAdmin) {
       setCollapsed((c) => !c);
     }
   };
 
   const closeMobileSidebar = () => setSidebarOpen(false);
 
-  const marginLeft = isMobile ? 0 : collapsed ? "4rem" : "14rem";
+  const showSidebar = isAdmin || isMobile;
+  const marginLeft = isMobile ? 0 : isAdmin ? (collapsed ? "4rem" : "14rem") : 0;
 
   return (
     <div className="app-shell">
-      <Topbar onToggleSidebar={toggleSidebar} />
-      <Sidebar
-        open={sidebarOpen}
-        collapsed={collapsed}
-        onNavigate={closeMobileSidebar}
-      />
+      <Topbar onToggleSidebar={toggleSidebar} isAdmin={isAdmin} isMobile={isMobile} />
+      {showSidebar && (
+        <Sidebar
+          open={sidebarOpen}
+          collapsed={collapsed}
+          onNavigate={closeMobileSidebar}
+        />
+      )}
       <main
         className="app-main transition-[margin] duration-300"
         style={{ marginLeft }}
